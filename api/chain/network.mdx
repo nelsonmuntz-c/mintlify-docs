@@ -46,10 +46,10 @@ curl http://67.205.164.156:1317/cosmos/base/tendermint/v1beta1/node_info
 | Field | Description |
 |-------|-------------|
 | `default_node_info.network` | Chain ID (`xyz-1` for mainnet) |
-| `default_node_info.version` | CometBFT version |
+| `default_node_info.version` | Consensus engine version |
 | `default_node_info.moniker` | Node's human-readable name |
 | `application_version.version` | `xyzd` binary version |
-| `application_version.cosmos_sdk_version` | Cosmos SDK version |
+| `application_version.cosmos_sdk_version` | Framework version |
 
 ## Get Syncing Status
 
@@ -76,7 +76,7 @@ If `syncing` is `true`, block and transaction queries may be behind the actual c
 
 ## Health Check
 
-The simplest way to verify the node is reachable. Available on the Tendermint RPC port:
+The simplest way to verify the node is reachable. Available on the RPC port:
 
 ```bash
 curl http://67.205.164.156:26657/health

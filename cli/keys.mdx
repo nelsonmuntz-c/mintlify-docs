@@ -126,13 +126,13 @@ xyz keys export mykey
 Enter passphrase to encrypt the exported key:
 Confirm passphrase:
 
------BEGIN TENDERMINT PRIVATE KEY-----
+-----BEGIN XYZ PRIVATE KEY-----
 kdf: bcrypt
 salt: ABC123DEF456...
 type: secp256k1
 
 base64EncodedEncryptedPrivateKey...
------END TENDERMINT PRIVATE KEY-----
+-----END XYZ PRIVATE KEY-----
 ```
 </Accordion>
 
@@ -146,7 +146,7 @@ xyz keys import mykey --armor
 
 ## Key Derivation
 
-XYZ Chain uses the Cosmos standard HD path:
+XYZ Chain uses the following HD path:
 
 ```
 m/44'/118'/0'/0/0
@@ -155,15 +155,15 @@ m/44'/118'/0'/0/0
 | Component | Value | Meaning |
 |-----------|-------|---------|
 | Purpose | 44' | BIP44 |
-| Coin Type | 118' | Cosmos ecosystem |
+| Coin Type | 118' | XYZ Chain |
 | Account | 0' | First account |
 | Change | 0 | External chain |
 | Index | 0 | First address |
 
 This ensures compatibility with:
 - Keplr wallet
-- Ledger (Cosmos app)
-- Other Cosmos wallets
+- Ledger
+- Other compatible wallets
 
 ## Address Format
 

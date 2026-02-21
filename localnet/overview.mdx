@@ -23,7 +23,7 @@ When you start localnet, you get:
 - **Full XYZ Chain node** running locally
 - **Pre-funded test accounts** (alice, bob)
 - **All APIs** (RPC, REST, gRPC)
-- **CosmWasm** enabled for smart contracts
+- **WASM contracts** enabled for smart contracts
 
 ## Architecture
 
@@ -33,8 +33,8 @@ When you start localnet, you get:
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
-│  │   xyzd      │  │  Tendermint │  │  CometBFT   │    │
-│  │   (app)     │◀─│  (consensus)│◀─│  (network)  │    │
+│  │   xyzd      │  │  Consensus  │  │   Network   │    │
+│  │   (app)     │◀─│   (BFT)    │◀─│   (P2P)     │    │
 │  └─────────────┘  └─────────────┘  └─────────────┘    │
 │         │                                               │
 │         ▼                                               │
@@ -68,8 +68,8 @@ xyz localnet stop
 
 | Service | URL | Purpose |
 |---------|-----|---------|
-| Tendermint RPC | http://localhost:26657 | Transactions, blocks, consensus |
-| REST API | http://localhost:1317 | Cosmos SDK queries |
+| RPC | http://localhost:26657 | Transactions, blocks, consensus |
+| REST API | http://localhost:1317 | Chain state queries |
 | gRPC | localhost:9090 | Programmatic access |
 
 ## Test Accounts

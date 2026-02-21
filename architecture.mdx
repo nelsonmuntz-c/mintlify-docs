@@ -5,7 +5,7 @@ description: 'How XYZ Chain, the Launchpad, AMM, Bridge, and Telegram Bot fit to
 
 # Architecture
 
-XYZ Chain is a Cosmos SDK blockchain with a set of CosmWasm smart contracts and off-chain services that together form a token launch and trading ecosystem.
+XYZ Chain is a blockchain with a set of WASM smart contracts and off-chain services that together form a token launch and trading ecosystem.
 
 ## System Overview
 
@@ -13,7 +13,7 @@ XYZ Chain is a Cosmos SDK blockchain with a set of CosmWasm smart contracts and 
 ┌─────────────────────────────────────────────────────────────────┐
 │                         XYZ Chain                               │
 │                                                                 │
-│  Cosmos SDK Modules          CosmWasm Contracts                 │
+│  Chain Modules               WASM Contracts                     │
 │  ┌──────────┐ ┌──────────┐  ┌─────────────┐ ┌──────────────┐   │
 │  │ x/bridge │ │x/token   │  │  Launchpad  │ │     AMM      │   │
 │  │ mint/burn│ │ launch   │  │  (bonding   │ │  (xy=k DEX)  │   │
@@ -24,7 +24,7 @@ XYZ Chain is a Cosmos SDK blockchain with a set of CosmWasm smart contracts and 
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘           │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
-│                     CometBFT Consensus                          │
+│                     XYZ Consensus                                │
 └────────────┬────────────────────┬───────────────────┬───────────┘
              │                    │                   │
         ┌────┴────┐          ┌────┴────┐         ┌────┴────┐
@@ -47,20 +47,19 @@ XYZ Chain is a Cosmos SDK blockchain with a set of CosmWasm smart contracts and 
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| Consensus | CometBFT | Latest |
-| Application | Cosmos SDK | v0.53.4 |
-| Smart Contracts | wasmd (CosmWasm) | v0.60.3 |
-| IBC | ibc-go | v10.4.0 |
+| Consensus | XYZ Consensus (BFT) | Latest |
+| Application | XYZ Chain | v5.0.0 |
+| Smart Contracts | WASM Runtime | v0.60.3 |
 | Backend | Node.js / TypeScript / Express | - |
 | Database | TimescaleDB (PostgreSQL) | - |
 | Telegram Bot | grammY (TypeScript) | - |
-| Relayer | TypeScript / CosmJS | - |
+| Relayer | TypeScript | - |
 
 ---
 
 ## Launchpad (Bonding Curves)
 
-The Launchpad is a CosmWasm contract that lets anyone create a new token with a built-in bonding curve. It works like pump.fun — tokens start cheap, price rises as people buy, and the token automatically graduates to the AMM when enough XYZ accumulates.
+The Launchpad is a WASM contract that lets anyone create a new token with a built-in bonding curve. It works like pump.fun — tokens start cheap, price rises as people buy, and the token automatically graduates to the AMM when enough XYZ accumulates.
 
 ### How It Works
 
@@ -236,7 +235,7 @@ The full lifecycle of a token from creation through trading:
 
 ## Bridge (Solana <> XYZ Chain)
 
-The bridge is a native Cosmos SDK module (`x/bridge`) with a trusted relayer architecture. XYZ tokens on Solana are locked/released, and corresponding tokens are minted/burned on XYZ Chain.
+The bridge is a native chain module (`x/bridge`) with a trusted relayer architecture. XYZ tokens on Solana are locked/released, and corresponding tokens are minted/burned on XYZ Chain.
 
 ### Solana to XYZ (Deposit)
 
@@ -332,7 +331,7 @@ The backend is a Node.js service that indexes chain events and provides a REST A
 ### Indexing Pipeline
 
 ```
-XYZ Chain (CometBFT RPC, polled every ~5s)
+XYZ Chain (RPC, polled every ~5s)
        │
        ▼
   Block Poller
@@ -373,7 +372,7 @@ An oracle updater fetches the XYZ/USD price from pump.fun every 5 minutes and su
 
 ---
 
-## Custom Cosmos SDK Modules
+## Custom Chain Modules
 
 ### x/bridge
 
@@ -385,7 +384,7 @@ Provides an on-chain governance path for listing tokens directly in the AMM, byp
 
 **Flow**: Submit proposal → bridge-verified wallets vote → at threshold, admin seeds AMM pool with CW20 token + XYZ liquidity.
 
-### Standard Cosmos Modules
+### Standard Modules
 
 | Module | Status | Notes |
 |--------|--------|-------|
@@ -395,8 +394,7 @@ Provides an on-chain governance path for listing tokens directly in the AMM, byp
 | `x/gov` | Active | On-chain governance |
 | `x/distribution` | Active | Fee reward distribution |
 | `x/mint` | **Disabled** | Zero inflation — all params set to 0 |
-| `x/wasm` | Active | CosmWasm smart contracts |
-| `x/ibc` | Active | Inter-Blockchain Communication |
+| `x/wasm` | Active | WASM smart contracts |
 
 ---
 
@@ -404,8 +402,8 @@ Provides an on-chain governance path for listing tokens directly in the AMM, byp
 
 | Service | Port | Protocol | Purpose |
 |---------|------|----------|---------|
-| Tendermint RPC | 26657 | HTTP/WS | Block queries, tx broadcast |
-| REST API | 1317 | HTTP | Cosmos SDK queries |
+| RPC | 26657 | HTTP/WS | Block queries, tx broadcast |
+| REST API | 1317 | HTTP | Chain state queries |
 | gRPC | 9090 | HTTP/2 | High-performance queries |
 | Launchpad API | 3001 | HTTP | Token data, candles, SSE feeds |
 | P2P | 26656 | TCP | Node communication |

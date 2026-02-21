@@ -5,7 +5,7 @@ description: 'Account types and addresses on XYZ Chain'
 
 # Accounts
 
-XYZ Chain uses Cosmos SDK account types with the `xyz` address prefix.
+XYZ Chain uses standard account types with the `xyz` address prefix.
 
 ## Address Formats
 
@@ -17,7 +17,7 @@ XYZ Chain uses Cosmos SDK account types with the `xyz` address prefix.
 
 ## Account Derivation
 
-XYZ Chain uses the Cosmos standard HD path for key derivation:
+XYZ Chain uses the following HD path for key derivation:
 
 ```
 m/44'/118'/0'/0/0
@@ -26,13 +26,13 @@ m/44'/118'/0'/0/0
 | Level | Value | Meaning |
 |-------|-------|---------|
 | Purpose | 44' | BIP44 standard |
-| Coin Type | 118' | Cosmos (ATOM) |
+| Coin Type | 118' | XYZ Chain |
 | Account | 0' | First account |
 | Change | 0 | External chain |
 | Index | 0 | First address |
 
 <Note>
-The coin type `118` is the standard Cosmos coin type. This ensures compatibility with Cosmos wallets like Keplr.
+The coin type `118` ensures compatibility with wallets like Keplr.
 </Note>
 
 ## Key Generation
@@ -209,7 +209,7 @@ System accounts owned by chain modules (not user-controlled):
 
 ### Contract Account
 
-Accounts created when instantiating CosmWasm contracts:
+Accounts created when instantiating WASM contracts:
 
 ```bash
 xyz program info xyz1contractaddress...
@@ -226,7 +226,7 @@ xyz program info xyz1contractaddress...
   </Accordion>
 
   <Accordion title="Use hardware wallets">
-    For significant holdings, use Ledger or similar hardware wallets with Cosmos support.
+    For significant holdings, use Ledger or similar hardware wallets with XYZ Chain support.
   </Accordion>
 
   <Accordion title="Verify addresses">

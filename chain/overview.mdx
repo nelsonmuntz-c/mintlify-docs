@@ -5,7 +5,7 @@ description: 'XYZ Chain specifications and configuration'
 
 # Chain Overview
 
-XYZ Chain is a Proof of Stake blockchain built with Cosmos SDK v0.53.4 and CosmWasm v0.60.3.
+XYZ Chain is a Proof of Stake blockchain with WASM smart contract support.
 
 ## Chain Identity
 
@@ -40,7 +40,7 @@ All on-chain amounts are in `uxyz` (micro XYZ). The CLI automatically displays a
 
 ## Consensus
 
-XYZ Chain uses CometBFT (formerly Tendermint) for Byzantine Fault Tolerant consensus.
+XYZ Chain uses Byzantine Fault Tolerant (BFT) consensus.
 
 | Property | Value |
 |----------|-------|
@@ -138,7 +138,7 @@ xyzd tx staking create-validator \
 
 ## Smart Contracts
 
-XYZ Chain supports CosmWasm smart contracts through the `x/wasm` module.
+XYZ Chain supports WASM smart contracts through the `x/wasm` module.
 
 ### Supported Standards
 

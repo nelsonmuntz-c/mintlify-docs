@@ -16,8 +16,16 @@
   },
   "topbarLinks": [
     {
-      "name": "GitHub",
-      "url": "https://github.com/xyz-chain/xyz"
+      "name": "Bridge",
+      "url": "https://bridge.xyzchain.org/"
+    },
+    {
+      "name": "Launchpad",
+      "url": "https://launch.xyzchain.org/"
+    },
+    {
+      "name": "Explorer",
+      "url": "https://explorer.xyzchain.org/"
     }
   ],
   "topbarCtaButton": {
@@ -136,8 +144,8 @@
     }
   ],
   "footerSocials": {
-    "twitter": "https://twitter.com/xyzchain",
-    "github": "https://github.com/xyz-chain",
-    "discord": "https://discord.gg/xyz"
+    "x": "https://x.com/xyzchainorg",
+    "telegram": "https://t.me/xyzchainorg",
+    "website": "https://xyzchain.org/"
   }
 }

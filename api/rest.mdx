@@ -1,11 +1,11 @@
 ---
 title: 'REST API'
-description: 'HTTP REST API for Cosmos SDK queries'
+description: 'HTTP REST API for XYZ Chain queries'
 ---
 
 # REST API
 
-The REST API provides HTTP access to Cosmos SDK and CosmWasm queries.
+The REST API provides HTTP access to XYZ Chain and WASM contract queries.
 
 ## Endpoint
 
@@ -43,7 +43,7 @@ curl http://localhost:1317/cosmos/base/tendermint/v1beta1/node_info
     "name": "xyz",
     "app_name": "xyzd",
     "version": "1.0.0",
-    "cosmos_sdk_version": "v0.50.13"
+    "sdk_version": "v0.50.13"
   }
 }
 ```
@@ -197,7 +197,7 @@ curl http://localhost:1317/cosmos/gov/v1/proposals/1
 curl http://localhost:1317/cosmos/gov/v1/proposals/1/votes
 ```
 
-## CosmWasm Module
+## WASM Module
 
 ### List Codes
 
@@ -249,7 +249,7 @@ curl http://localhost:1317/cosmwasm/wasm/v1/contract/xyz1contract...
     "admin": "xyz1admin...",
     "label": "My Contract",
     "created": {"block_height": "12345"},
-    "ibc_port_id": ""
+    "port_id": ""
   }
 }
 ```
@@ -453,6 +453,6 @@ Response (XYZ Chain has zero inflation):
 | Slashing | `/cosmos/slashing/v1beta1/` |
 | Staking | `/cosmos/staking/v1beta1/` |
 | Upgrade | `/cosmos/upgrade/v1beta1/` |
-| Tendermint | `/cosmos/base/tendermint/v1beta1/` |
+| Node | `/cosmos/base/tendermint/v1beta1/` |
 | Tx | `/cosmos/tx/v1beta1/` |
-| CosmWasm | `/cosmwasm/wasm/v1/` |
+| WASM | `/cosmwasm/wasm/v1/` |

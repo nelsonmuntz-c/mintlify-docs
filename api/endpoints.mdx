@@ -11,7 +11,7 @@ XYZ Chain exposes three API interfaces for programmatic access.
 
 | API | Port | Protocol | Best For |
 |-----|------|----------|----------|
-| [Tendermint RPC](/api/rpc) | 26657 | HTTP/WebSocket | Transactions, blocks, consensus |
+| [RPC](/api/rpc) | 26657 | HTTP/WebSocket | Transactions, blocks, consensus |
 | [REST API](/api/rest) | 1317 | HTTP | Browser apps, simple queries |
 | [gRPC](/api/grpc) | 9090 | HTTP/2 | High-performance, typed clients |
 
@@ -92,7 +92,7 @@ Note: The REST query data is base64-encoded JSON.
 
 ## Choosing an API
 
-### Use Tendermint RPC when:
+### Use RPC when:
 
 - Broadcasting transactions
 - Subscribing to events (WebSocket)
@@ -195,7 +195,7 @@ done
 
 ## WebSocket Subscriptions
 
-Subscribe to real-time events via Tendermint RPC:
+Subscribe to real-time events via RPC:
 
 ```javascript
 const ws = new WebSocket('ws://localhost:26657/websocket');
@@ -245,11 +245,11 @@ For production applications, use official SDK libraries:
 |----------|---------|
 | JavaScript | [@cosmjs/stargate](https://github.com/cosmos/cosmjs) |
 | Python | [cosmpy](https://github.com/fetchai/cosmpy) |
-| Go | [cosmos-sdk/client](https://github.com/cosmos/cosmos-sdk) |
-| Rust | [cosmrs](https://github.com/cosmos/cosmos-rust) |
+| Go | XYZ Chain Go client |
+| Rust | XYZ Chain Rust client |
 
 ## Next Steps
 
-- [Tendermint RPC Reference](/api/rpc)
+- [RPC Reference](/api/rpc)
 - [REST API Reference](/api/rest)
 - [gRPC Reference](/api/grpc)

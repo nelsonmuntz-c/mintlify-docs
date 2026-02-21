@@ -68,7 +68,7 @@ Returns the same structure as above for the specified denom.
 
 ## CW20 Token Metadata
 
-CW20 tokens (created via the Launchpad or custom contracts) are **not** native denominations — they live inside CosmWasm contracts. To query their metadata, use the smart contract query endpoint:
+CW20 tokens (created via the Launchpad or custom contracts) are **not** native denominations -- they live inside WASM contracts. To query their metadata, use the smart contract query endpoint:
 
 ```bash
 # Base64 encode the query
@@ -94,10 +94,10 @@ curl "http://67.205.164.156:1317/cosmwasm/wasm/v1/contract/xyz1tokencontract.../
 
 | Property | Native (`uxyz`) | CW20 Tokens |
 |----------|----------------|-------------|
-| Storage | Bank module state | CosmWasm contract state |
+| Storage | Bank module state | WASM contract state |
 | Query | `/cosmos/bank/v1beta1/...` | `/cosmwasm/wasm/v1/contract/.../smart/...` |
 | Transfer | `MsgSend` | CW20 `Transfer` execute message |
-| Standard | Cosmos SDK native | CosmWasm CW20 standard |
+| Standard | XYZ Chain native | CW20 standard |
 | Created by | Genesis / Bridge module | Launchpad contract or manual deploy |
 
 <Note>

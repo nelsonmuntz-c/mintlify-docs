@@ -189,7 +189,7 @@ grpcurl -plaintext \
 grpcurl -plaintext localhost:9090 cosmos.staking.v1beta1.Query/Pool
 ```
 
-## CosmWasm Queries
+## WASM Contract Queries
 
 ### List Codes
 
@@ -309,7 +309,7 @@ grpcurl -plaintext \
   cosmos.tx.v1beta1.Service/GetTxsEvent
 ```
 
-## Tendermint Service
+## Node Service
 
 ### Get Node Info
 
@@ -380,7 +380,7 @@ func main() {
 }
 ```
 
-### Query CosmWasm Contract
+### Query WASM Contract
 
 ```go
 package main
@@ -391,7 +391,7 @@ import (
     "encoding/json"
     "fmt"
 
-    wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+    wasmtypes "github.com/cosmwasm/wasmd/x/wasm/types"
     "google.golang.org/grpc"
     "google.golang.org/grpc/credentials/insecure"
 )
@@ -421,7 +421,7 @@ func main() {
 
 ## Using with JavaScript
 
-### Setup with CosmJS
+### Setup with JavaScript
 
 ```javascript
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
@@ -429,7 +429,7 @@ import { Tendermint37Client } from "@cosmjs/tendermint-rpc";
 import { QueryClientImpl as BankQuery } from "cosmjs-types/cosmos/bank/v1beta1/query";
 
 async function main() {
-  // Connect via Tendermint RPC (which proxies to gRPC internally)
+  // Connect via RPC (which proxies to gRPC internally)
   const tendermint = await Tendermint37Client.connect("http://localhost:26657");
   const queryClient = QueryClient.withExtensions(tendermint);
   const rpc = createProtobufRpcClient(queryClient);
@@ -519,5 +519,5 @@ Example error:
 | `cosmos.slashing.v1beta1.Query` | Slashing queries |
 | `cosmos.staking.v1beta1.Query` | Staking queries |
 | `cosmos.tx.v1beta1.Service` | Transaction service |
-| `cosmos.base.tendermint.v1beta1.Service` | Tendermint queries |
-| `cosmwasm.wasm.v1.Query` | CosmWasm queries |
+| `cosmos.base.tendermint.v1beta1.Service` | Node queries |
+| `cosmwasm.wasm.v1.Query` | WASM contract queries |
