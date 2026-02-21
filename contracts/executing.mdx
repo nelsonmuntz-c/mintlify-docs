@@ -1,0 +1,300 @@
+---
+title: 'Executing Contracts'
+description: 'Call contract methods that modify state'
+---
+
+# Executing Contracts
+
+The `xyz program execute` command calls contract methods that modify state (like a transaction).
+
+## Usage
+
+```bash
+xyz program execute <contract> <message> --from <key> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `contract` | Contract address |
+| `message` | JSON message or @file.json |
+
+## Basic Execution
+
+```bash
+xyz program execute xyz1contract... '{"increment":{}}' --from alice
+```
+
+Output:
+```
+Transaction Successful!
+
+Contract: xyz1contract...
+Method:   increment
+TxHash:   ABC123DEF456...
+Gas Used: 115678
+Block:    12345
+```
+
+## Message Formats
+
+### Inline JSON
+
+```bash
+xyz program execute xyz1contract... '{"increment":{}}' --from alice
+```
+
+### With Parameters
+
+```bash
+xyz program execute xyz1contract... '{"reset":{"count":100}}' --from alice
+```
+
+### From File
+
+```bash
+# Create message file
+echo '{"transfer":{"recipient":"xyz1recipient...","amount":"1000"}}' > msg.json
+
+# Execute from file
+xyz program execute xyz1contract... @msg.json --from alice
+```
+
+## Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--from` | Signing key | Required |
+| `--funds` | Send funds with execution | None |
+| `--dry-run` | Simulate only | false |
+| `--gas-buffer` | Gas multiplier | 1.3 |
+
+## Examples
+
+### Transfer Tokens (CW20)
+
+```bash
+xyz program execute xyz1tokencontract... \
+  '{"transfer":{"recipient":"xyz1bob...","amount":"1000000"}}' \
+  --from alice
+```
+
+### Send with Funds
+
+Some contracts require funds with execution:
+
+```bash
+xyz program execute xyz1escrowcontract... \
+  '{"deposit":{}}' \
+  --from alice \
+  --funds 1000000uxyz
+```
+
+### Batch Operations
+
+```bash
+xyz program execute xyz1contract... \
+  '{"batch":{"operations":[{"increment":{}},{"increment":{}},{"increment":{}}]}}' \
+  --from alice
+```
+
+## Dry Run
+
+Simulate without broadcasting:
+
+```bash
+xyz program execute xyz1contract... '{"increment":{}}' --from alice --dry-run
+```
+
+Output:
+```
+Dry run mode - transaction not broadcast
+
+Estimated gas: 150,000
+Estimated fee: 1,500 uxyz
+
+Execute Details:
+  Contract: xyz1contract...
+  Message: {"increment":{}}
+  Funds: 0
+```
+
+## Message Examples
+
+### Simple Action
+
+```json
+{"increment": {}}
+```
+
+### With Parameters
+
+```json
+{
+  "transfer": {
+    "recipient": "xyz1recipient...",
+    "amount": "1000000"
+  }
+}
+```
+
+### Nested Structure
+
+```json
+{
+  "create_order": {
+    "order_type": "limit",
+    "side": "buy",
+    "price": "100",
+    "quantity": "10"
+  }
+}
+```
+
+### Multiple Actions (if supported)
+
+```json
+{
+  "batch": {
+    "msgs": [
+      {"increment": {}},
+      {"set_owner": {"address": "xyz1new..."}}
+    ]
+  }
+}
+```
+
+## Authorization
+
+Execute methods may have authorization requirements:
+
+### Public Methods
+
+Anyone can call:
+
+```rust
+ExecuteMsg::Increment {} => { /* anyone */ }
+```
+
+### Owner-Only Methods
+
+```rust
+ExecuteMsg::Reset { count } => {
+    if info.sender != OWNER.load(deps.storage)? {
+        return Err(ContractError::Unauthorized {});
+    }
+    // ...
+}
+```
+
+Error when unauthorized:
+```
+Error: permission denied: only the contract owner can reset
+```
+
+## Error Handling
+
+The CLI provides user-friendly errors:
+
+| Chain Error | CLI Message |
+|-------------|-------------|
+| `unauthorized` | Permission denied: only the contract owner can... |
+| `insufficient funds` | Insufficient balance to complete... |
+| `out of gas` | Transaction requires more gas. Try increasing --gas |
+
+## Complex JSON
+
+For complex messages, use a file:
+
+```bash
+# Create complex message
+cat > msg.json << 'EOF'
+{
+  "create_proposal": {
+    "title": "Upgrade Protocol",
+    "description": "This proposal upgrades the protocol to v2",
+    "msgs": [
+      {
+        "wasm": {
+          "execute": {
+            "contract_addr": "xyz1other...",
+            "msg": {"upgrade": {"version": "2.0.0"}},
+            "funds": []
+          }
+        }
+      }
+    ]
+  }
+}
+EOF
+
+# Execute
+xyz program execute xyz1governance... @msg.json --from alice
+```
+
+## Scripting
+
+### Check Result
+
+```bash
+# Execute and capture tx hash
+RESULT=$(xyz program execute xyz1contract... '{"increment":{}}' --from alice 2>&1)
+TXHASH=$(echo "$RESULT" | grep "TxHash:" | awk '{print $2}')
+
+echo "Transaction: $TXHASH"
+```
+
+### Retry on Failure
+
+```bash
+#!/bin/bash
+MAX_RETRIES=3
+RETRY=0
+
+while [ $RETRY -lt $MAX_RETRIES ]; do
+  if xyz program execute xyz1contract... '{"increment":{}}' --from alice; then
+    echo "Success!"
+    exit 0
+  fi
+  RETRY=$((RETRY + 1))
+  echo "Retry $RETRY/$MAX_RETRIES..."
+  sleep 2
+done
+
+echo "Failed after $MAX_RETRIES retries"
+exit 1
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Invalid JSON">
+    Validate your JSON:
+    ```bash
+    echo '{"increment":{}}' | jq .
+    ```
+  </Accordion>
+
+  <Accordion title="Contract not found">
+    Verify contract exists:
+    ```bash
+    xyz program info xyz1contract...
+    ```
+  </Accordion>
+
+  <Accordion title="Unauthorized">
+    Check method requirements:
+    - Are you the owner?
+    - Do you have the required role?
+  </Accordion>
+
+  <Accordion title="Out of gas">
+    Increase gas buffer:
+    ```bash
+    xyz program execute xyz1contract... '{"complex":{}}' \
+      --from alice \
+      --gas-buffer 2.0
+    ```
+  </Accordion>
+</AccordionGroup>

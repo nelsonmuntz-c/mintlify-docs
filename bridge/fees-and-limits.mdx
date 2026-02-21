@@ -1,0 +1,88 @@
+---
+title: 'Fees & Limits'
+description: 'Rate limits, minimum amounts, and gas fee requirements for the XYZ Bridge'
+---
+
+# Fees & Limits
+
+The XYZ Bridge has no bridging fees -- you receive the exact amount you deposit or withdraw. However, you pay standard gas fees on each chain, and rate limits apply to withdrawals.
+
+## Bridging Fees
+
+| Fee Type | Amount |
+|----------|--------|
+| Bridge fee | **None** (0%) |
+| Deposit fee | **None** |
+| Withdrawal fee | **None** |
+
+You receive exactly the amount you bridge, minus only the gas fees for the transactions on each chain.
+
+## Gas Requirements
+
+You need gas tokens on each chain to execute bridge transactions.
+
+### Deposit (Solana to XYZ Chain)
+
+| Requirement | Details |
+|-------------|---------|
+| SOL for Solana tx | ~0.000005 SOL per transaction (standard Solana fee) |
+| Account creation | ~0.002 SOL for first-time registration (rent-exempt UserAccount PDA) |
+
+### Withdraw (XYZ Chain to Solana)
+
+| Requirement | Details |
+|-------------|---------|
+| XYZ for chain tx | ~0.01 XYZ for the burn transaction on XYZ Chain |
+| SOL for Solana tx | Paid by the relayer (no cost to user) |
+
+<Tip>
+The withdrawal UI automatically reserves ~0.01 XYZ from your max balance for gas fees when you click "Max".
+</Tip>
+
+## Minimum Amounts
+
+| Direction | Minimum |
+|-----------|---------|
+| Deposit | 1 XYZ |
+| Withdrawal | No minimum (but consider gas costs) |
+
+The minimum deposit is configurable by the bridge admin and exists to prevent dust attacks on the pool vault.
+
+## Rate Limits (Withdrawals)
+
+Withdrawals are subject to governance-controlled rate limits to prevent abuse:
+
+| Parameter | Value | Controlled By |
+|-----------|-------|---------------|
+| `max_burn_per_tx` | 1,000,000 XYZ (1M) | Governance proposal |
+| `max_burns_per_block` | 10 burns per block | Governance proposal |
+
+### What This Means
+
+- A single withdrawal transaction can move up to **1 million XYZ**
+- A maximum of **10 withdrawal transactions** can be included in a single block (~6 second block time)
+- For amounts above 1M XYZ, split into multiple transactions
+
+<Note>
+Deposits have no rate limits. You can deposit any amount in a single transaction.
+</Note>
+
+## Processing Time
+
+| Step | Typical Duration |
+|------|-----------------|
+| Deposit (Solana to XYZ Chain) | ~30 seconds |
+| Withdrawal (XYZ Chain to Solana) | ~20-30 seconds |
+
+Processing time includes network confirmation, finality waiting (32 slots for deposits), and relayer execution.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deposit" icon="arrow-down" href="/bridge/deposit">
+    Bridge tokens from Solana to XYZ Chain
+  </Card>
+  <Card title="Withdraw" icon="arrow-up" href="/bridge/withdraw">
+    Bridge tokens from XYZ Chain to Solana
+  </Card>
+</CardGroup>

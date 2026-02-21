@@ -1,0 +1,99 @@
+---
+title: 'Graduation'
+description: 'How launchpad tokens graduate to the AMM when the dynamic threshold is reached'
+---
+
+# Graduation
+
+Graduation is the process of migrating a token from its bonding curve to the [AMM](/amm/overview). This happens automatically when the curve accumulates enough XYZ reserves, creating a deep liquidity pool for open market trading.
+
+## Graduation Threshold
+
+A token graduates when its bonding curve reaches its **dynamic XYZ threshold** in reserves. The threshold is computed from the oracle XYZ/USD price and configured USD targets (e.g., ~$2,000 raised), and can only ratchet upward as the oracle price changes.
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Bonding Curve                                       │
+│  ████████████████████████████░░░░░░░  75% to grad   │
+│  XYZ reserves: 75% of threshold                      │
+└─────────────────────────────────────────────────────┘
+```
+
+You can check any token's progress toward graduation:
+
+```json
+{ "progress": { "token_address": "<cw20_token_address>" } }
+```
+
+Returns `progress_percent`, `xyz_raised`, and `graduation_threshold`.
+
+## How Graduation Works
+
+<Steps>
+
+### Threshold is reached
+
+A buy transaction pushes the curve's XYZ reserves to or above the graduation threshold. Graduation triggers automatically as part of that buy transaction.
+
+### Curve closes permanently
+
+The bonding curve is marked as `graduated`. No more buys or sells can happen on the curve.
+
+### Liquidity migrates to AMM
+
+All remaining assets move to a new AMM pool:
+- **XYZ reserves** -- All XYZ locked in the curve becomes the XYZ side of the pool
+- **Unsold tokens** -- All tokens still held by the launchpad become the token side of the pool
+
+### AMM pool opens for trading
+
+A new constant-product AMM pool is created with the migrated liquidity. Trading continues on the AMM with `x*y=k` mechanics.
+
+</Steps>
+
+## What Changes After Graduation
+
+| Aspect | Before (Bonding Curve) | After (AMM) |
+|--------|----------------------|-------------|
+| Price model | Linear curve | Constant product (x*y=k) |
+| Liquidity | Guaranteed by curve formula | Pool-based, deeper with more volume |
+| Buy fee | 0.5% | 1% swap fee |
+| Sell fee | 2.5% (to LP) | 1% swap fee |
+| Price direction | Always up with buys | Market-driven (can go up or down) |
+
+## Manual Graduation
+
+Graduation usually happens automatically during a buy. However, if a token has reached the threshold but hasn't graduated (edge case), anyone can trigger it manually:
+
+```json
+{
+  "graduate": {
+    "token_address": "<cw20_token_address>"
+  }
+}
+```
+
+This is permissionless -- no funds required, anyone can call it.
+
+## Post-Graduation Trading
+
+After graduation, use the AMM to trade:
+
+- **Buy tokens**: Swap XYZ for tokens on the [AMM](/amm/swapping)
+- **Sell tokens**: Swap tokens for XYZ on the [AMM](/amm/swapping)
+- **Check price**: Query the AMM [pool](/amm/overview) for current reserves and price
+
+<Note>
+The AMM may charge an **augmented fee** (up to 5%) on top of the base 1% swap fee for newly graduated pools. This extra fee auto-disables once the pool reaches a target value, ensuring fair price discovery during the transition period.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AMM Overview" icon="arrow-right-arrow-left" href="/amm/overview">
+    Understand how the AMM works
+  </Card>
+  <Card title="AMM Swapping" icon="repeat" href="/amm/swapping">
+    Trade tokens on the AMM
+  </Card>
+</CardGroup>

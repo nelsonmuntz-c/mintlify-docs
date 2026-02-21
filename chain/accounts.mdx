@@ -1,0 +1,239 @@
+---
+title: 'Accounts'
+description: 'Account types and addresses on XYZ Chain'
+---
+
+# Accounts
+
+XYZ Chain uses Cosmos SDK account types with the `xyz` address prefix.
+
+## Address Formats
+
+| Type | Prefix | Example |
+|------|--------|---------|
+| Account | `xyz1` | `xyz1abc123def456ghi789jkl012mno345pqr678stu` |
+| Validator | `xyzvaloper1` | `xyzvaloper1abc123def456ghi789jkl012mno345pqr678stu` |
+| Consensus | `xyzvalcons1` | `xyzvalcons1abc123def456ghi789jkl012mno345pqr678stu` |
+
+## Account Derivation
+
+XYZ Chain uses the Cosmos standard HD path for key derivation:
+
+```
+m/44'/118'/0'/0/0
+```
+
+| Level | Value | Meaning |
+|-------|-------|---------|
+| Purpose | 44' | BIP44 standard |
+| Coin Type | 118' | Cosmos (ATOM) |
+| Account | 0' | First account |
+| Change | 0 | External chain |
+| Index | 0 | First address |
+
+<Note>
+The coin type `118` is the standard Cosmos coin type. This ensures compatibility with Cosmos wallets like Keplr.
+</Note>
+
+## Key Generation
+
+### Generate New Key
+
+```bash
+xyz keys generate mykey
+```
+
+Output:
+```
+Generated new keypair: mykey
+
+Address: xyz1qwertyuiopasdfghjklzxcvbnm12345678
+Mnemonic (save this securely):
+word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12
+
+WARNING: Write down your mnemonic phrase and store it securely.
+```
+
+### Import Existing Key
+
+```bash
+xyz keys import mykey --mnemonic "word1 word2 word3 ... word12"
+```
+
+Or interactively:
+```bash
+xyz keys import mykey
+# Enter your 12 or 24 word mnemonic:
+```
+
+### List Keys
+
+```bash
+xyz keys list
+```
+
+Output:
+```
+NAME      ADDRESS
+mykey     xyz1qwertyuiopasdfghjklzxcvbnm12345678
+alice     xyz1aliceaddress...
+bob       xyz1bobaddress...
+```
+
+### Export Key
+
+```bash
+xyz keys export mykey
+```
+
+This exports an armored ASCII format that can be imported into other wallets.
+
+## Test Accounts
+
+The local development network (`xyz localnet`) includes pre-funded test accounts:
+
+| Name | Balance | Mnemonic |
+|------|---------|----------|
+| `alice` | 1,000,000 XYZ | `abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about` |
+| `bob` | 500,000 XYZ | Standard test mnemonic |
+
+<Warning>
+**Never use test mnemonics for real funds.** These are well-known phrases used only for development.
+</Warning>
+
+## Keyring Backends
+
+The CLI supports multiple storage backends for private keys:
+
+### OS Backend (Recommended)
+
+Uses the operating system's secure keychain:
+- **macOS:** Keychain
+- **Windows:** Credential Manager
+- **Linux:** Secret Service (GNOME Keyring, KWallet)
+
+```bash
+xyz config set keyring-backend os
+```
+
+### File Backend
+
+Stores keys in an encrypted file at `~/.xyz/keyring-file/`:
+
+```bash
+xyz config set keyring-backend file
+```
+
+<Note>
+File backend requires a passphrase for each operation.
+</Note>
+
+### Test Backend
+
+Stores keys unencrypted (development only):
+
+```bash
+xyz config set keyring-backend test
+```
+
+<Warning>
+**Never use test backend for real funds.** Keys are stored in plain text.
+</Warning>
+
+## Account Operations
+
+### Check Balance
+
+```bash
+# By address
+xyz balance xyz1abc123...
+
+# By key name
+xyz balance --key mykey
+```
+
+### View Transaction History
+
+```bash
+xyz tx history xyz1abc123...
+# or
+xyz tx history --key mykey
+```
+
+### Using xyzd
+
+For advanced operations, use the chain daemon:
+
+```bash
+# List all keys
+xyzd keys list --home ~/.xyz --keyring-backend os
+
+# Show specific key
+xyzd keys show mykey --home ~/.xyz --keyring-backend os
+
+# Get account info from chain
+xyzd query auth account xyz1abc123... --node tcp://localhost:26657
+```
+
+## Account Types
+
+### Standard Account
+
+Regular user accounts created with `xyz keys generate`.
+
+```json
+{
+  "@type": "/cosmos.auth.v1beta1.BaseAccount",
+  "address": "xyz1...",
+  "pub_key": {
+    "@type": "/cosmos.crypto.secp256k1.PubKey",
+    "key": "..."
+  },
+  "account_number": "42",
+  "sequence": "7"
+}
+```
+
+### Module Account
+
+System accounts owned by chain modules (not user-controlled):
+
+| Module | Address | Permissions |
+|--------|---------|-------------|
+| `fee_collector` | `xyz1...` | None (receives fees) |
+| `distribution` | `xyz1...` | None (holds rewards) |
+| `bonded_tokens_pool` | `xyz1...` | Burner, Staking |
+| `not_bonded_tokens_pool` | `xyz1...` | Burner, Staking |
+| `gov` | `xyz1...` | Burner |
+| `wasm` | `xyz1...` | Burner |
+
+### Contract Account
+
+Accounts created when instantiating CosmWasm contracts:
+
+```bash
+xyz program info xyz1contractaddress...
+```
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Backup your mnemonic">
+    - Write it on paper (not digital)
+    - Store in multiple secure locations
+    - Consider metal backup for fire/water resistance
+    - Never share with anyone
+  </Accordion>
+
+  <Accordion title="Use hardware wallets">
+    For significant holdings, use Ledger or similar hardware wallets with Cosmos support.
+  </Accordion>
+
+  <Accordion title="Verify addresses">
+    Always double-check the first and last 4-6 characters of addresses before sending.
+  </Accordion>
+
+  <Accordion title="Use test accounts for development">
+    Keep real funds on separate keys from development/testing activities.
+  </Accordion>
+</AccordionGroup>

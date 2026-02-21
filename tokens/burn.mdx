@@ -1,0 +1,181 @@
+---
+title: 'Burn Tokens'
+description: 'Permanently destroy tokens from your balance'
+---
+
+# Burn Tokens
+
+The `xyz token burn` command permanently destroys tokens from your balance, reducing the total supply.
+
+## Usage
+
+```bash
+xyz token burn <contract> <amount> --from <key>
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `contract` | Token contract address |
+| `amount` | Amount to burn (in smallest unit) |
+
+### Flags
+
+| Flag | Description | Required |
+|------|-------------|----------|
+| `--from` | Your signing key | Yes |
+| `--dry-run` | Simulate only | No |
+
+## Examples
+
+### Basic Burn
+
+```bash
+xyz token burn xyz1tokencontract... 1000000 --from mykey
+```
+
+### Dry Run
+
+```bash
+xyz token burn xyz1tokencontract... 1000000 --from mykey --dry-run
+```
+
+Output:
+```
+Dry run mode - transaction not broadcast
+
+Estimated gas: 100,000
+Estimated fee: 1,000 uxyz
+
+Burn Details:
+  Token: xyz1tokencontract...
+  From: xyz1youraddress...
+  Amount: 1,000,000
+```
+
+## Output
+
+Successful burn:
+
+```
+Tokens Burned Successfully!
+
+Token:        xyz1tokencontract...
+Burned From:  xyz1youraddress...
+Amount:       1,000,000
+TxHash:       ABC123DEF456...
+Gas Used:     95678
+Block:        12345
+```
+
+## Verify Burn
+
+Check balance and total supply after burning:
+
+```bash
+# Your balance (should be reduced)
+xyz token balance xyz1tokencontract... --key mykey
+
+# Total supply (should be reduced)
+xyz token info xyz1tokencontract...
+```
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Deflationary Mechanics" icon="fire">
+    Reduce supply over time to increase scarcity
+  </Card>
+  <Card title="Token Buyback" icon="rotate-left">
+    Buy tokens from market and burn them
+  </Card>
+  <Card title="Error Correction" icon="bug">
+    Burn accidentally minted tokens
+  </Card>
+  <Card title="Bridge Burns" icon="bridge">
+    Burn when bridging to another chain
+  </Card>
+</CardGroup>
+
+## Amount Calculation
+
+Amount is in the token's smallest unit. For 6 decimals:
+
+| Display | Amount (base) |
+|---------|---------------|
+| 1 MTK | 1,000,000 |
+| 0.5 MTK | 500,000 |
+| 100 MTK | 100,000,000 |
+
+## Burn All Tokens
+
+To burn your entire balance:
+
+```bash
+# Get current balance
+BALANCE=$(xyz token balance xyz1contract... --key mykey --output json | jq -r '.balance')
+
+# Burn all
+xyz token burn xyz1contract... $BALANCE --from mykey
+```
+
+## Error Handling
+
+| Error | Meaning | Solution |
+|-------|---------|----------|
+| "insufficient token balance" | Not enough tokens | Check balance first |
+| "contract not found" | Wrong contract address | Verify contract exists |
+
+### Check Balance Before Burn
+
+```bash
+# Verify you have enough tokens
+xyz token balance xyz1contract... --key mykey
+```
+
+## Under the Hood
+
+`xyz token burn` executes a `MsgExecuteContract`:
+
+```json
+{
+  "contract": "xyz1tokencontract...",
+  "msg": {
+    "burn": {
+      "amount": "1000000"
+    }
+  },
+  "funds": []
+}
+```
+
+## Burn vs BurnFrom
+
+CW20 has two burn methods:
+
+| Method | Who Burns | Requires |
+|--------|-----------|----------|
+| `burn` | Token holder | Just your tokens |
+| `burn_from` | Approved spender | Prior allowance |
+
+The `xyz token burn` command uses `burn` (burning your own tokens).
+
+<Warning>
+**Burning is irreversible!** Burned tokens are permanently destroyed and cannot be recovered.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Insufficient balance">
+    You can only burn tokens you own:
+    ```bash
+    xyz token balance xyz1contract... --key mykey
+    ```
+  </Accordion>
+
+  <Accordion title="Zero amount">
+    Amount must be greater than 0.
+  </Accordion>
+</AccordionGroup>

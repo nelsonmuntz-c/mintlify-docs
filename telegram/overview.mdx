@@ -1,0 +1,83 @@
+---
+title: 'Telegram Bot Overview'
+description: 'Trade XYZ tokens and manage your wallet directly from Telegram'
+---
+
+# Telegram Bot
+
+The XYZ Telegram Bot lets you trade tokens, check balances, and manage your wallet without leaving Telegram. It creates a non-custodial wallet for you and provides instant access to the XYZ Chain ecosystem.
+
+## Getting Started
+
+<Steps>
+
+### Start the bot
+
+Open the XYZ Trading Bot in Telegram and send `/start`. The bot creates a new XYZ Chain wallet for you automatically.
+
+### Fund your wallet
+
+Send XYZ tokens to your bot wallet address. You can bridge tokens from Solana using the [XYZ Bridge](/bridge/overview) or receive from another XYZ Chain wallet.
+
+### Start trading
+
+Use the interactive menu buttons or paste a token contract address to start trading instantly.
+
+</Steps>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Instant Trading" icon="bolt">
+    Buy and sell tokens with quick buttons. Paste any token address to trade immediately.
+  </Card>
+  <Card title="Portfolio Tracking" icon="chart-pie">
+    View all your token positions, current values, and profit/loss at a glance.
+  </Card>
+  <Card title="Limit Orders" icon="clock">
+    Set buy and sell orders at target prices. The bot monitors and executes automatically.
+  </Card>
+  <Card title="Wallet Management" icon="wallet">
+    Check balances, send tokens, import/export wallets -- all from chat commands.
+  </Card>
+</CardGroup>
+
+## Main Menu
+
+After running `/start`, the bot displays an interactive menu with buttons for:
+
+| Button | Action |
+|--------|--------|
+| **Buy** | Buy tokens by entering a contract address and amount |
+| **Sell** | Sell tokens from your portfolio |
+| **Positions** | View your open token positions |
+| **Limit Orders** | Create and manage limit orders |
+| **Wallet** | View address, balance, send tokens |
+| **Settings** | Configure slippage, notifications, etc. |
+| **Referral** | View your referral link and earnings |
+
+## Quick Trade
+
+The fastest way to trade: simply **paste a token contract address** into the chat. The bot recognizes it and shows a trading interface for that token with buy/sell options.
+
+## Security
+
+- **Non-custodial** -- Your wallet keys are encrypted and stored securely
+- **Private chats only** -- The bot operates exclusively in private messages
+- **Auto-delete** -- Sensitive messages (like exported mnemonics) auto-delete after 30 seconds
+- **Import/Export** -- Bring your own wallet or export to use elsewhere
+
+<Warning>
+Your bot wallet is separate from your browser wallet. Fund it independently. Never share your exported mnemonic with anyone.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Commands" icon="terminal" href="/telegram/commands">
+    Full command reference
+  </Card>
+  <Card title="Launchpad" icon="rocket" href="/launchpad/overview">
+    Discover tokens to trade
+  </Card>
+</CardGroup>

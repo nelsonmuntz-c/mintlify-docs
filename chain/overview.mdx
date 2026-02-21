@@ -1,0 +1,186 @@
+---
+title: 'Chain Overview'
+description: 'XYZ Chain specifications and configuration'
+---
+
+# Chain Overview
+
+XYZ Chain is a Proof of Stake blockchain built with Cosmos SDK v0.53.4 and CosmWasm v0.60.3.
+
+## Chain Identity
+
+| Property | Value |
+|----------|-------|
+| Chain ID | `xyz-1` |
+| Binary Name | `xyzd` |
+| Address Prefix | `xyz` |
+| Validator Prefix | `xyzvaloper` |
+| Consensus Prefix | `xyzvalcons` |
+
+## Token Denomination
+
+| Property | Value |
+|----------|-------|
+| Base Denomination | `uxyz` |
+| Display Denomination | `XYZ` |
+| Decimals | 6 |
+| Conversion | 1 XYZ = 1,000,000 uxyz |
+
+### Examples
+
+```
+1 XYZ        = 1,000,000 uxyz
+0.5 XYZ      = 500,000 uxyz
+0.000001 XYZ = 1 uxyz
+```
+
+<Note>
+All on-chain amounts are in `uxyz` (micro XYZ). The CLI automatically displays amounts in XYZ for readability.
+</Note>
+
+## Consensus
+
+XYZ Chain uses CometBFT (formerly Tendermint) for Byzantine Fault Tolerant consensus.
+
+| Property | Value |
+|----------|-------|
+| Block Time | ~6 seconds |
+| Finality | Instant (1 block) |
+| Validators | Up to 100 |
+| BFT Threshold | 2/3 |
+
+## Genesis Configuration
+
+### Initial Accounts
+
+The genesis file includes three pre-configured accounts for development:
+
+| Account | Balance | Purpose |
+|---------|---------|---------|
+| `alice` | 1,000,000 XYZ | Development, initial validator |
+| `bob` | 500,000 XYZ | Faucet account |
+| `treasury` | 100,000,000 XYZ | Future validator rewards |
+
+### Genesis Balances
+
+```json
+{
+  "accounts": [
+    {
+      "name": "alice",
+      "coins": ["1000000000000uxyz"]
+    },
+    {
+      "name": "bob",
+      "coins": ["500000000000uxyz"]
+    },
+    {
+      "name": "treasury",
+      "coins": ["100000000000000uxyz"]
+    }
+  ]
+}
+```
+
+## Network Endpoints
+
+### Mainnet
+
+| Service | URL |
+|---------|-----|
+| RPC | `http://67.205.164.156:26657` |
+| REST | `http://67.205.164.156:1317` |
+| gRPC | `67.205.164.156:9090` |
+
+### Local Development
+
+| Service | URL |
+|---------|-----|
+| RPC | `http://localhost:26657` |
+| REST | `http://localhost:1317` |
+| gRPC | `localhost:9090` |
+| Faucet | `http://localhost:4500` |
+
+## Running a Node
+
+### Full Node
+
+```bash
+# Initialize node
+xyzd init my-node --chain-id xyz-1
+
+# Get genesis from an existing validator
+# Contact the team for the genesis file
+
+# Start node
+xyzd start
+```
+
+### Validator Node
+
+<Warning>
+Running a validator requires careful security practices. See our [Validator Guide](/chain/validators) for details.
+</Warning>
+
+```bash
+# Create validator (after syncing)
+xyzd tx staking create-validator \
+  --amount=1000000uxyz \
+  --pubkey=$(xyzd tendermint show-validator) \
+  --moniker="my-validator" \
+  --commission-rate="0.10" \
+  --commission-max-rate="0.20" \
+  --commission-max-change-rate="0.01" \
+  --min-self-delegation="1" \
+  --from=my-key \
+  --chain-id=xyz-testnet-1
+```
+
+## Smart Contracts
+
+XYZ Chain supports CosmWasm smart contracts through the `x/wasm` module.
+
+### Supported Standards
+
+| Standard | Description |
+|----------|-------------|
+| CW20 | Fungible tokens (like ERC-20/SPL) |
+| CW721 | Non-fungible tokens (like ERC-721) |
+| CW1 | Proxy contracts |
+| CW3 | Multisig contracts |
+
+### Contract Limits
+
+| Limit | Value |
+|-------|-------|
+| Max Contract Size | 800 KB |
+| Max Gas Per Block | 75,000,000 |
+| Gas Multiplier | 100x |
+
+## Useful Commands
+
+### Query Chain Status
+
+```bash
+# Get current block height
+xyzd status | jq '.SyncInfo.latest_block_height'
+
+# Get node info
+xyzd status | jq '.NodeInfo'
+
+# Check if node is syncing
+xyzd status | jq '.SyncInfo.catching_up'
+```
+
+### Query Module Params
+
+```bash
+# Staking parameters
+xyzd query staking params
+
+# Governance parameters
+xyzd query gov params
+
+# Wasm parameters
+xyzd query wasm params
+```

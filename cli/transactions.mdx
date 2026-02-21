@@ -1,0 +1,197 @@
+---
+title: 'Transactions'
+description: 'View transaction history'
+---
+
+# Transactions
+
+The `xyz tx` command group provides transaction-related operations.
+
+## Transaction History
+
+View recent transactions for an address:
+
+```bash
+xyz tx history <address>
+```
+
+Or by key name:
+
+```bash
+xyz tx history --key <name>
+```
+
+### Example
+
+```bash
+xyz tx history --key alice
+```
+
+Output:
+```
+HASH                                                              HEIGHT  TYPE             TIMESTAMP
+ABC123DEF456789...                                                12345   /cosmos.bank...  2024-01-29 10:30:00
+DEF456789ABC123...                                                12340   /cosmwasm.wasm.. 2024-01-29 10:25:00
+789ABC123DEF456...                                                12335   /cosmos.staking. 2024-01-29 10:20:00
+```
+
+## Command Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--key` | Key name from keyring | - |
+| `--limit` | Number of transactions | 10 |
+| `--output`, `-o` | Output format (table/json) | table |
+| `--node` | RPC endpoint override | config |
+
+## Limit Results
+
+```bash
+# Get last 5 transactions
+xyz tx history --key mykey --limit 5
+
+# Get last 50 transactions
+xyz tx history --key mykey --limit 50
+```
+
+## JSON Output
+
+For scripting:
+
+```bash
+xyz tx history --key mykey --output json
+```
+
+```json
+{
+  "transactions": [
+    {
+      "hash": "ABC123DEF456789...",
+      "height": 12345,
+      "type": "/cosmos.bank.v1beta1.MsgSend",
+      "timestamp": "2024-01-29T10:30:00Z"
+    },
+    {
+      "hash": "DEF456789ABC123...",
+      "height": 12340,
+      "type": "/cosmwasm.wasm.v1.MsgExecuteContract",
+      "timestamp": "2024-01-29T10:25:00Z"
+    }
+  ]
+}
+```
+
+## Transaction Types
+
+Common transaction types you'll see:
+
+| Type | Description |
+|------|-------------|
+| `/cosmos.bank.v1beta1.MsgSend` | Native token transfer |
+| `/cosmos.staking.v1beta1.MsgDelegate` | Delegation to validator |
+| `/cosmos.staking.v1beta1.MsgUndelegate` | Undelegation from validator |
+| `/cosmwasm.wasm.v1.MsgStoreCode` | Upload contract code |
+| `/cosmwasm.wasm.v1.MsgInstantiateContract` | Create contract instance |
+| `/cosmwasm.wasm.v1.MsgExecuteContract` | Execute contract method |
+| `/cosmos.gov.v1beta1.MsgVote` | Governance vote |
+
+## View Transaction Details
+
+For detailed transaction information, use `xyzd`:
+
+```bash
+xyzd query tx <hash> --node tcp://localhost:26657
+```
+
+Or via REST API:
+
+```bash
+curl "http://localhost:1317/cosmos/tx/v1beta1/txs/<hash>"
+```
+
+## Examples
+
+### Monitor Activity
+
+```bash
+# Watch for new transactions
+watch -n 10 "xyz tx history --key alice --limit 3"
+```
+
+### Export to CSV
+
+```bash
+# Get JSON and convert
+xyz tx history --key alice --limit 100 --output json | \
+  jq -r '.transactions[] | [.hash, .height, .type, .timestamp] | @csv' > txs.csv
+```
+
+### Filter by Type
+
+```bash
+# Get only wasm transactions
+xyz tx history --key alice --limit 50 --output json | \
+  jq '.transactions[] | select(.type | contains("wasm"))'
+```
+
+### Count Transactions
+
+```bash
+# Total transactions (up to limit)
+xyz tx history --key alice --limit 100 --output json | \
+  jq '.transactions | length'
+```
+
+## Understanding Transaction Flow
+
+```
+┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+│   Create    │─────▶│   Sign      │─────▶│  Broadcast  │
+│     Tx      │      │ (keyring)   │      │  (node)     │
+└─────────────┘      └─────────────┘      └─────────────┘
+                                                │
+                                                ▼
+┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+│   Query     │◀─────│  Finalized  │◀─────│  Mempool    │
+│  (history)  │      │  (block)    │      │  (pending)  │
+└─────────────┘      └─────────────┘      └─────────────┘
+```
+
+## Transaction Status
+
+Transactions go through these states:
+
+| State | Description |
+|-------|-------------|
+| Pending | In mempool, not yet in block |
+| Included | In a block, but not finalized |
+| Finalized | Block confirmed (instant on XYZ Chain) |
+| Failed | Execution error (still recorded) |
+
+Failed transactions still appear in history with error codes.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No transactions found">
+    - Account may have no transaction history
+    - Check address/key is correct
+    - Increase limit: `--limit 50`
+  </Accordion>
+
+  <Accordion title="Missing recent transaction">
+    - Node may be syncing
+    - Wait a few blocks
+    - Check node status: `curl http://localhost:26657/status`
+  </Accordion>
+
+  <Accordion title="Connection error">
+    ```bash
+    # Check node is running
+    xyz localnet status
+
+    # Or check RPC endpoint
+    xyz config get node
+    ```
+  </Accordion>
+</AccordionGroup>

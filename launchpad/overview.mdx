@@ -1,0 +1,85 @@
+---
+title: 'Launchpad Overview'
+description: 'Launch tokens on bonding curves with automatic AMM graduation'
+---
+
+# XYZ Launchpad
+
+The XYZ Launchpad lets anyone create a new token with a built-in bonding curve. As people buy the token, the price rises along a predictable curve. When enough XYZ accumulates, the token automatically graduates to the [AMM](/amm/overview) for open market trading.
+
+## How It Works
+
+<Steps>
+
+### Create a Token
+
+Anyone pays a creation fee (currently 80,000 XYZ) to launch a new token. The token starts on a linear bonding curve with all supply held by the launchpad contract.
+
+### Buy and Sell on the Curve
+
+Tokens are bought and sold along the bonding curve. The price starts low and increases linearly as more tokens are purchased. You can sell back at any time for the current curve price.
+
+### Graduate to AMM
+
+When the curve accumulates enough XYZ reserves (threshold is dynamically computed from oracle price and USD targets), it automatically migrates all liquidity to a constant-product AMM pool. The bonding curve closes permanently.
+
+### Trade on the AMM
+
+After graduation, all trading moves to the AMM with standard `x*y=k` mechanics and deeper liquidity.
+
+</Steps>
+
+## Bonding Curve Mechanics
+
+The launchpad uses a **constant-product virtual curve** (similar to pump.fun). Virtual reserves create a starting price without seed liquidity:
+
+```
+K = virtual_xyz * virtual_tokens          (constant)
+price = K / (virtual_tokens - tokens_sold)^2
+```
+
+- **Starting price**: Dynamically computed from oracle XYZ/USD price and configured USD targets
+- **Supply**: 100,000,000 tokens (100M) per launch
+- **Decimals**: 6 (1 token = 1,000,000 micro-units)
+
+As more tokens are purchased, the price rises. When tokens are sold back, the price decreases. The curve provides guaranteed liquidity at every price point.
+
+## Fee Structure
+
+| Fee | Rate | Details |
+|-----|------|---------|
+| Token creation | 80,000 XYZ | Fixed fee, becomes initial curve reserves |
+| Buy fee | 0.5% (50 bps) | Deducted from XYZ input before curve calculation |
+| Sell fee | 2.5% (250 bps) | Deducted from XYZ output, goes to LP reserves |
+
+<Note>
+All trading fees go to liquidity reserves. There is no token burning and no creator fee share at this time.
+</Note>
+
+## Token Lifecycle
+
+```
+┌──────────────┐     ┌──────────────────┐     ┌──────────────┐
+│  Created     │────►│  Bonding Curve    │────►│  Graduated   │
+│  (80K XYZ    │     │  (Buy/Sell along  │     │  (AMM pool   │
+│   fee paid)  │     │   virtual curve)  │     │   trading)   │
+└──────────────┘     └──────────────────┘     └──────────────┘
+                   dynamic XYZ threshold ─────►
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create a Token" icon="plus" href="/launchpad/create-token">
+    Launch your own token on the launchpad
+  </Card>
+  <Card title="Trading" icon="chart-line" href="/launchpad/trading">
+    Buy and sell tokens on bonding curves
+  </Card>
+  <Card title="Graduation" icon="graduation-cap" href="/launchpad/graduation">
+    How tokens migrate to the AMM
+  </Card>
+  <Card title="AMM" icon="arrow-right-arrow-left" href="/amm/overview">
+    Post-graduation trading on the AMM
+  </Card>
+</CardGroup>

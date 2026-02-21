@@ -1,0 +1,262 @@
+---
+title: 'Test Accounts'
+description: 'Pre-funded accounts for local development'
+---
+
+# Test Accounts
+
+Localnet provides pre-funded test accounts for immediate use.
+
+## Available Accounts
+
+| Name | Address | Initial Balance |
+|------|---------|-----------------|
+| `alice` | xyz1alice... | 1,000,000 XYZ (1,000,000,000,000 uxyz) |
+| `bob` | xyz1bob... | 500,000 XYZ (500,000,000,000 uxyz) |
+
+These accounts are automatically available when localnet is running.
+
+## Using Test Accounts
+
+### Check Balance
+
+```bash
+xyz balance --key alice
+```
+
+Output:
+```
+Balances for alice (xyz1alice...)
+
+DENOM    AMOUNT
+uxyz     1,000,000,000,000  (1,000,000 XYZ)
+```
+
+### Send Tokens
+
+```bash
+# Alice sends to Bob
+xyz tx send xyz1bob... 100000uxyz --from alice
+```
+
+### Deploy Contracts
+
+```bash
+xyz program deploy artifacts/my_contract.wasm --from alice --label "My Contract"
+```
+
+### Execute Contracts
+
+```bash
+xyz program execute xyz1contract... '{"increment":{}}' --from bob
+```
+
+## Account Details
+
+### Alice
+
+Primary test account, typically used for deployments.
+
+```bash
+# View full account info
+xyz keys show alice
+
+# Get address
+xyz keys show alice --address
+```
+
+### Bob
+
+Secondary test account, useful for testing transfers.
+
+```bash
+xyz keys show bob
+```
+
+## Mnemonics
+
+Test accounts use deterministic mnemonics for reproducibility. Query the actual mnemonics from your localnet keyring:
+
+<Warning>
+These mnemonics are public and for testing only. NEVER use them for real funds.
+</Warning>
+
+```bash
+# Export a test account mnemonic
+xyz keys export alice --unsafe --unarmored-hex
+```
+
+## Creating Additional Accounts
+
+### Generate New Account
+
+```bash
+xyz keys generate dev-test
+```
+
+### Fund from Alice
+
+```bash
+xyz tx send $(xyz keys show dev-test --address) 100000uxyz --from alice
+```
+
+### Import Existing
+
+```bash
+xyz keys import my-test --mnemonic "your twelve word mnemonic phrase here"
+```
+
+## Multi-Account Workflows
+
+### Token Transfer
+
+```bash
+# Alice → Bob
+xyz tx send $(xyz keys show bob --address) 50000uxyz --from alice
+```
+
+### Contract Ownership Transfer
+
+```bash
+# Alice deploys
+CONTRACT=$(xyz program deploy artifacts/my_contract.wasm --from alice --label "Shared Contract" | grep "Contract:" | awk '{print $2}')
+
+# Bob executes
+xyz program execute $CONTRACT '{"increment":{}}' --from bob
+
+# Query result
+xyz program query $CONTRACT '{"get_count":{}}'
+```
+
+## Checking Balances
+
+### Single Account
+
+```bash
+xyz balance --key alice
+```
+
+### All Test Accounts
+
+```bash
+for key in alice bob; do
+  echo "=== $key ==="
+  xyz balance --key $key
+done
+```
+
+### JSON Output
+
+```bash
+xyz balance --key alice --output json
+```
+
+```json
+{
+  "address": "xyz1alice...",
+  "balances": [
+    {"denom": "uxyz", "amount": "1000000000000"}
+  ]
+}
+```
+
+## Reset Account Balances
+
+To restore accounts to initial state:
+
+```bash
+# Reset entire localnet
+xyz localnet stop --clean
+xyz localnet start
+```
+
+Accounts return to their initial balances (alice: 1,000,000 XYZ, bob: 500,000 XYZ).
+
+## Scripting with Test Accounts
+
+### Bash Script
+
+```bash
+#!/bin/bash
+
+# Deploy and test with multiple accounts
+CONTRACT=$(xyz program deploy artifacts/counter.wasm \
+  --from alice \
+  --label "Counter" \
+  --msg '{"count":0}' | grep "Contract:" | awk '{print $2}')
+
+echo "Contract: $CONTRACT"
+
+# Alice increments
+xyz program execute $CONTRACT '{"increment":{}}' --from alice
+
+# Bob increments
+xyz program execute $CONTRACT '{"increment":{}}' --from bob
+
+# Check count
+xyz program query $CONTRACT '{"get_count":{}}'
+# Expected: {"count": 2}
+```
+
+### Test Script
+
+```bash
+#!/bin/bash
+set -e
+
+echo "Testing token transfer..."
+
+# Get initial balances
+ALICE_BEFORE=$(xyz balance --key alice --output json | jq -r '.balances[0].amount')
+BOB_BEFORE=$(xyz balance --key bob --output json | jq -r '.balances[0].amount')
+
+# Transfer
+xyz tx send $(xyz keys show bob --address) 1000uxyz --from alice
+
+# Get final balances
+ALICE_AFTER=$(xyz balance --key alice --output json | jq -r '.balances[0].amount')
+BOB_AFTER=$(xyz balance --key bob --output json | jq -r '.balances[0].amount')
+
+# Verify
+if [ "$BOB_AFTER" -gt "$BOB_BEFORE" ]; then
+  echo "✓ Transfer successful"
+else
+  echo "✗ Transfer failed"
+  exit 1
+fi
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Account not found">
+    Test accounts are only available when localnet is running:
+    ```bash
+    xyz localnet status
+    xyz localnet start  # if not running
+    ```
+  </Accordion>
+
+  <Accordion title="Insufficient funds">
+    Account may have spent its balance. Reset localnet:
+    ```bash
+    xyz localnet stop --clean
+    xyz localnet start
+    ```
+  </Accordion>
+
+  <Accordion title="Wrong keyring">
+    Localnet uses the `test` keyring backend:
+    ```bash
+    xyz keys list --keyring-backend test
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+1. **Use alice for deployments** - Keep bob for testing interactions
+2. **Reset often** - Start fresh to avoid state confusion
+3. **Script everything** - Make tests reproducible
+4. **Check balances** - Verify before complex operations
+5. **Use JSON output** - Easier parsing in scripts

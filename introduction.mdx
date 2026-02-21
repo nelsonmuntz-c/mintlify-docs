@@ -1,0 +1,85 @@
+---
+title: 'XYZ Docs'
+description: 'Welcome to XYZ Chain - A zero-inflation Cosmos SDK blockchain with CosmWasm smart contracts'
+---
+
+# Welcome to XYZ Chain
+
+XYZ Chain is a Proof of Stake blockchain built with [Cosmos SDK](https://docs.cosmos.network) designed to receive bridged XYZ tokens from Solana. The chain features **zero inflation** tokenomics and full [CosmWasm](https://cosmwasm.com) smart contract support.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Zero Inflation" icon="lock">
+    No new tokens are ever minted. The total supply is fixed at 1 billion XYZ tokens on Solana.
+  </Card>
+  <Card title="CosmWasm Contracts" icon="code">
+    Write smart contracts in Rust with the same development experience as Solana programs.
+  </Card>
+  <Card title="Solana Bridge" icon="bridge">
+    Bi-directional bridge between Solana and XYZ Chain with relayer-based security.
+  </Card>
+  <Card title="Token Launchpad" icon="rocket">
+    Launch tokens on bonding curves that auto-graduate to AMM pools.
+  </Card>
+</CardGroup>
+
+## Chain Specifications
+
+| Parameter | Value |
+|-----------|-------|
+| Chain ID | `xyz-1` |
+| Address Prefix | `xyz` |
+| Validator Prefix | `xyzvaloper` |
+| Binary Name | `xyzd` |
+| Base Denomination | `uxyz` |
+| Display Denomination | `XYZ` |
+| Decimals | 6 (1 XYZ = 1,000,000 uxyz) |
+
+## Base URLs
+
+| Service | URL |
+|---------|-----|
+| REST (Cosmos SDK) | `http://67.205.164.156:1317` |
+| RPC (Tendermint) | `http://67.205.164.156:26657` |
+| Launchpad API | `http://67.205.164.156:3001` |
+
+## Products
+
+<CardGroup cols={3}>
+  <Card title="Launchpad" icon="rocket" href="/launchpad/overview">
+    Launch tokens on bonding curves with automatic AMM graduation
+  </Card>
+  <Card title="AMM" icon="arrow-right-arrow-left" href="/amm/overview">
+    Constant-product DEX for graduated tokens
+  </Card>
+  <Card title="Bridge" icon="bridge" href="/bridge/overview">
+    Transfer XYZ between Solana and XYZ Chain
+  </Card>
+  <Card title="Telegram Bot" icon="robot" href="/telegram/overview">
+    Trade tokens directly from Telegram
+  </Card>
+  <Card title="Explorer" icon="magnifying-glass" href="/explorer/overview">
+    Browse blocks, transactions, and accounts
+  </Card>
+  <Card title="SDK" icon="code" href="/sdk/overview">
+    Build dApps with the TypeScript SDK
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running in 5 minutes
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/architecture">
+    Understand how all the pieces fit together
+  </Card>
+  <Card title="Install CLI" icon="terminal" href="/cli/installation">
+    Install the xyz command-line tool
+  </Card>
+  <Card title="API Reference" icon="plug" href="/api/chain/introduction">
+    REST, RPC, and gRPC endpoints
+  </Card>
+</CardGroup>

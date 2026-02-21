@@ -1,0 +1,98 @@
+---
+title: 'Bridge FAQ'
+description: 'Frequently asked questions about the XYZ Bridge'
+---
+
+# Bridge FAQ
+
+<AccordionGroup>
+
+<Accordion title="How long does a bridge transfer take?">
+Both deposits and withdrawals typically complete within **30 seconds**:
+
+- **Deposit**: ~5s Solana confirmation + ~15s finality wait + ~10s relayer processing
+- **Withdrawal**: ~6s XYZ Chain block + ~10s relayer detection + ~5s Solana execution
+</Accordion>
+
+<Accordion title="My deposit hasn't appeared on XYZ Chain. What should I do?">
+Wait at least 2 minutes. The relayer waits for 32-slot finality on Solana (~15 seconds) before processing. If your tokens still haven't appeared:
+
+1. Verify your Solana transaction was confirmed (check your wallet or a Solana explorer)
+2. Confirm your XYZ Chain address was registered before depositing
+3. Check the correct XYZ Chain address -- the bridge mints to the address linked during registration
+
+If the issue persists, contact support in the [Discord community](https://discord.gg/xyz).
+</Accordion>
+
+<Accordion title="My withdrawal is stuck. What should I do?">
+Withdrawals can take up to 30 seconds. If your tokens haven't arrived on Solana:
+
+1. Confirm the burn transaction was successful on XYZ Chain (check the Explorer)
+2. Verify the Solana address you entered is correct
+3. Wait a few minutes -- the relayer may be processing a queue
+
+If the withdrawal fails on the Solana side, the relayer flags it for manual intervention. Your burned tokens on XYZ Chain are recorded and will be fulfilled.
+</Accordion>
+
+<Accordion title="Do I need to register my address every time?">
+No. Registration is a **one-time step** per Solana wallet. Once you link your Solana wallet to an XYZ Chain address, all future deposits from that wallet are automatically routed to the same XYZ Chain address.
+</Accordion>
+
+<Accordion title="Can I change my registered XYZ Chain address?">
+No. Each Solana wallet can only be linked to **one XYZ Chain address**. This is enforced by the on-chain UserAccount PDA. If you need to bridge to a different XYZ Chain address, use a different Solana wallet.
+</Accordion>
+
+<Accordion title="Is there a minimum deposit?">
+Yes. The minimum deposit is **1 XYZ**. This prevents dust attacks on the pool vault. Deposits below the minimum are rejected by the bridge program.
+</Accordion>
+
+<Accordion title="Is there a maximum transfer amount?">
+- **Deposits**: No maximum. You can deposit any amount in a single transaction.
+- **Withdrawals**: Maximum **1,000,000 XYZ** per transaction. For larger amounts, split into multiple transactions.
+</Accordion>
+
+<Accordion title="Are there any bridging fees?">
+No. The bridge charges **zero fees**. You receive the exact amount you deposit or withdraw. You only pay standard gas fees on each chain (SOL for Solana transactions, XYZ for XYZ Chain transactions).
+</Accordion>
+
+<Accordion title="Can I bridge staking rewards back to Solana?">
+No. Only bridge-minted tokens (tokens that came in via deposit) can be withdrawn. Native staking rewards earned on XYZ Chain are XYZ Chain-native and cannot cross back to Solana through the bridge.
+</Accordion>
+
+<Accordion title="Which wallets are supported?">
+| Chain | Supported Wallets |
+|-------|-------------------|
+| Solana | Phantom, Solflare, and other Solana Wallet Adapter-compatible wallets |
+| XYZ Chain | Keplr, Leap, XYZ Wallet |
+</Accordion>
+
+<Accordion title="What happens if the relayer goes down?">
+No funds are lost. The relayer tracks its processing state in a database:
+
+- **Deposits**: When the relayer comes back online, it resumes from the last processed Solana signature
+- **Withdrawals**: It resumes from the last processed XYZ Chain block height
+
+All pending transfers are completed once the relayer recovers.
+</Accordion>
+
+<Accordion title="Is the bridge audited?">
+The bridge uses several security measures:
+
+- **Pool custody** -- All tokens are held in an auditable on-chain vault (not a centralized wallet)
+- **Supply conservation** -- The total supply across Solana + pool + XYZ Chain always equals 1 billion
+- **Rate limiting** -- Governance-controlled limits prevent abuse
+- **User-signed burns** -- The relayer cannot initiate withdrawals; only users can burn their own tokens
+</Accordion>
+
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deposit" icon="arrow-down" href="/bridge/deposit">
+    Bridge tokens from Solana to XYZ Chain
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/bridge/architecture">
+    Technical deep-dive into the bridge system
+  </Card>
+</CardGroup>

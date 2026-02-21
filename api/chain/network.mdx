@@ -1,0 +1,133 @@
+---
+title: 'Network'
+description: 'Query node info, syncing status, and chain health'
+---
+
+# Network
+
+Check the health and status of XYZ Chain nodes.
+
+## Get Node Info
+
+Returns node software version, chain ID, and protocol information.
+
+```bash
+curl http://67.205.164.156:1317/cosmos/base/tendermint/v1beta1/node_info
+```
+
+<Accordion title="Response">
+```json
+{
+  "default_node_info": {
+    "protocol_version": {
+      "p2p": "8",
+      "block": "11",
+      "app": "0"
+    },
+    "default_node_id": "abc123def456...",
+    "network": "xyz-1",
+    "version": "0.38.0",
+    "moniker": "validator-1"
+  },
+  "application_version": {
+    "name": "xyz",
+    "app_name": "xyzd",
+    "version": "5.0.0",
+    "cosmos_sdk_version": "v0.53.4",
+    "build_tags": "",
+    "go_version": "go1.24.1"
+  }
+}
+```
+</Accordion>
+
+### Key Fields
+
+| Field | Description |
+|-------|-------------|
+| `default_node_info.network` | Chain ID (`xyz-1` for mainnet) |
+| `default_node_info.version` | CometBFT version |
+| `default_node_info.moniker` | Node's human-readable name |
+| `application_version.version` | `xyzd` binary version |
+| `application_version.cosmos_sdk_version` | Cosmos SDK version |
+
+## Get Syncing Status
+
+Check if the node is currently catching up to the latest block.
+
+```bash
+curl http://67.205.164.156:1317/cosmos/base/tendermint/v1beta1/syncing
+```
+
+```json
+{
+  "syncing": false
+}
+```
+
+| Value | Meaning |
+|-------|---------|
+| `false` | Node is fully synced and up to date |
+| `true` | Node is still catching up — queries may return stale data |
+
+<Warning>
+If `syncing` is `true`, block and transaction queries may be behind the actual chain tip. Wait for sync to complete before relying on query results.
+</Warning>
+
+## Health Check
+
+The simplest way to verify the node is reachable. Available on the Tendermint RPC port:
+
+```bash
+curl http://67.205.164.156:26657/health
+```
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": -1,
+  "result": {}
+}
+```
+
+An empty result with no error means the node is healthy.
+
+## Get Latest Block Height
+
+A quick way to check how far along the chain is:
+
+```bash
+curl -s http://67.205.164.156:1317/cosmos/base/tendermint/v1beta1/blocks/latest \
+  | jq '.block.header.height'
+```
+
+## Chain Parameters
+
+### Mint Parameters (Zero Inflation)
+
+```bash
+curl http://67.205.164.156:1317/cosmos/mint/v1beta1/params
+```
+
+```json
+{
+  "params": {
+    "mint_denom": "uxyz",
+    "inflation_rate_change": "0",
+    "inflation_max": "0",
+    "inflation_min": "0",
+    "goal_bonded": "0.670000000000000000",
+    "blocks_per_year": "6311520"
+  }
+}
+```
+
+All inflation parameters are set to zero — no new tokens are ever minted on XYZ Chain.
+
+### Governance Parameters
+
+```bash
+curl http://67.205.164.156:1317/cosmos/gov/v1/params/voting
+```
+
+Returns the voting period, quorum, and threshold for governance proposals.

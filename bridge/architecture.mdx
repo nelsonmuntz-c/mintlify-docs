@@ -1,0 +1,187 @@
+---
+title: 'Bridge Architecture'
+description: 'Technical deep-dive into the XYZ Bridge system design'
+---
+
+# Bridge Architecture
+
+The XYZ Bridge uses a **Pool Bridge** architecture with three main components: a custom Anchor program on Solana, the `x/bridge` module on XYZ Chain, and a relayer service connecting them.
+
+## System Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         SOLANA                                   │
+│                                                                  │
+│   xyz-bridge program (Anchor 0.30.1)                            │
+│   ├── BridgePool (admin, relayer, vault, totals)                │
+│   ├── UserAccount (owner, xyz_chain_address, tracking)          │
+│   └── Pool vault (holds all deposited XYZ)                      │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         RELAYER                                  │
+│                                                                  │
+│   PoolMonitor ─────────► EventProcessor ─────────► XyzExecutor  │
+│   (WebSocket + polling)                           (Mint)        │
+│                                                                  │
+│   BurnMonitor ─────────► EventProcessor ─────────► PoolExecutor │
+│   (XYZ Chain blocks)                              (Withdraw)    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         XYZ CHAIN                                │
+│                                                                  │
+│   x/bridge module                                                │
+│   ├── MsgMintFromBridge (relayer-controlled)                    │
+│   └── MsgBurnForBridgeOut (user-initiated)                      │
+│                                                                  │
+│   Governance parameters:                                         │
+│   ├── max_burn_per_tx: 1,000,000 XYZ                           │
+│   └── max_burns_per_block: 10                                   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Solana Bridge Program
+
+The Anchor program (v0.30.1) manages the pool vault and user accounts on Solana.
+
+### Key Accounts
+
+| Account | Type | Purpose |
+|---------|------|---------|
+| `BridgePool` | PDA | Stores admin, relayer pubkey, vault address, deposit/withdrawal totals |
+| `UserAccount` | PDA | Links a Solana wallet to an XYZ Chain address, tracks per-user statistics |
+| `Pool Vault` | Token Account | Holds all deposited XYZ tokens in custody |
+
+### Instructions
+
+| Instruction | Caller | Description |
+|-------------|--------|-------------|
+| `register` | User | Creates UserAccount PDA, links Solana wallet to XYZ Chain address |
+| `deposit` | User | Transfers XYZ from user to pool vault, emits `DepositEvent` |
+| `withdraw` | Relayer only | Transfers XYZ from pool vault to user's token account |
+| `pause` / `unpause` | Admin | Emergency controls to halt bridge operations |
+
+### Address Validation
+
+- XYZ Chain addresses must start with `xyz1` and be 39+ characters
+- Solana addresses must be valid Base58 (32 bytes)
+
+## XYZ Chain Bridge Module
+
+The `x/bridge` module handles minting and burning on the XYZ Chain side.
+
+### Messages
+
+| Message | Signer | Description |
+|---------|--------|-------------|
+| `MsgMintFromBridge` | Relayer | Mints XYZ to a user's chain address after a verified deposit |
+| `MsgBurnForBridgeOut` | User | Burns XYZ from the user's account, emits event for relayer |
+
+### Burn Event Format
+
+When a user burns tokens, the module emits a `burn_for_bridge_out` event:
+
+```
+burn_id:        burn-{block_height}-{tx_index}
+sender:         xyz1...  (the burner's address)
+amount:         1000000  (in uxyz)
+solana_address: Base58 Solana address
+```
+
+The `burn_id` serves as a deduplication key -- the relayer will never process the same burn twice.
+
+## Relayer Components
+
+The relayer is a Node.js service that monitors both chains and executes cross-chain actions.
+
+### PoolMonitor (Solana Deposits)
+
+- **Primary**: WebSocket subscription to program logs with `finalized` commitment
+- **Backup**: Polls last 10 signatures for resilience
+- Parses `DepositEvent` from transaction logs
+- Waits for 32-slot finality before forwarding to the EventProcessor
+
+### BurnMonitor (XYZ Chain Withdrawals)
+
+- Polls XYZ Chain blocks for `burn_for_bridge_out` events
+- Extracts `burn_id`, sender, amount, and Solana address from event attributes
+- Uses `burn_id` as deduplication key (not transaction hash)
+
+### XyzExecutor
+
+- Signs and broadcasts `MsgMintFromBridge` on XYZ Chain
+- Uses the authorized relayer address
+- Exponential backoff retry on transient failures
+
+### PoolExecutor
+
+- Executes `withdraw` instruction on the Solana bridge program
+- Derives PDAs: `bridge_pool`, `user_account`, `pool_vault`
+- Creates or resolves the recipient's Associated Token Account (ATA)
+- **No auto-retry** on failures -- alerts for manual intervention
+
+### EventProcessor
+
+- Routes events to the appropriate executor
+- Validates event data before processing
+- Database-first recording (creates record before queueing action)
+
+## Security Features
+
+### Solana Side
+
+- **Admin controls** -- Pause, upgrade, and emergency withdraw capabilities
+- **Relayer authorization** -- Only the authorized relayer can execute withdrawals
+- **Minimum deposit** -- Prevents dust attacks (default: 1 XYZ)
+- **Event emission** -- Full audit trail via `DepositEvent` and `WithdrawEvent`
+
+### XYZ Chain Side
+
+- **Rate limiting** -- `max_burn_per_tx` and `max_burns_per_block` parameters
+- **User-initiated burns** -- Users sign their own burns; the relayer cannot move funds
+- **Burn ID tracking** -- Unique `burn-{height}-{tx_index}` format prevents duplicates
+- **Governance control** -- Rate limits are adjustable via governance proposals
+
+### Relayer
+
+- **Finality wait** -- 32-slot confirmation before processing deposits
+- **Deduplication** -- Database checks prevent double-processing
+- **No auto-retry on withdrawals** -- Failed withdrawals require manual review
+- **Database-first** -- Records are persisted before actions are queued
+
+## Failure Handling
+
+### Failed Withdrawals
+
+If a withdrawal fails on Solana:
+
+1. PoolExecutor logs the error with `burn_id` and failure reason
+2. Database record is marked as `failed`
+3. No auto-retry -- manual intervention required
+4. Admin investigates and manually re-executes if needed
+
+### Relayer Downtime
+
+If the relayer goes offline:
+
+- **Deposits**: PoolMonitor resumes from the last processed Solana signature
+- **Burns**: BurnMonitor resumes from the last processed block height
+- No transactions are lost (database tracks processing state)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Fees & Limits" icon="coins" href="/bridge/fees-and-limits">
+    Rate limits, minimums, and gas requirements
+  </Card>
+  <Card title="FAQ" icon="circle-question" href="/bridge/faq">
+    Common questions about the bridge
+  </Card>
+</CardGroup>

@@ -1,0 +1,88 @@
+---
+title: 'Deposit (Solana to XYZ Chain)'
+description: 'Step-by-step guide to bridging XYZ tokens from Solana to XYZ Chain'
+---
+
+# Deposit: Solana to XYZ Chain
+
+Depositing transfers your XYZ tokens from Solana into XYZ Chain. Your tokens are locked in the bridge pool vault on Solana, and an equivalent amount is minted on XYZ Chain.
+
+## Prerequisites
+
+- A Solana wallet (Phantom, Solflare, etc.) with XYZ tokens
+- An XYZ Chain wallet (Keplr, Leap, or XYZ Wallet)
+- A small amount of SOL for Solana transaction fees
+
+## Step-by-Step Guide
+
+<Steps>
+
+### Connect your Solana wallet
+
+Click the **Connect Solana** button at the top of the Bridge page. Select your preferred Solana wallet from the dropdown. Your XYZ token balance will appear once connected.
+
+### Register your XYZ Chain address (first time only)
+
+If this is your first time using the bridge, you need to link your Solana wallet to an XYZ Chain address. You can either:
+
+- **Connect a wallet** -- Click "Connect XYZ Wallet" and select Keplr, Leap, or XYZ Wallet to auto-fill your address
+- **Enter manually** -- Type your XYZ Chain address (starts with `xyz1`, 39+ characters)
+
+Click **Register Address** to create the on-chain link. This is a one-time step per wallet pair.
+
+<Note>
+Each Solana wallet can only be linked to one XYZ Chain address. You cannot change this mapping after registration.
+</Note>
+
+### Enter the deposit amount
+
+Type the amount of XYZ you want to bridge. The UI shows your available Solana balance and the minimum deposit requirement.
+
+Click **Max** to fill your full available balance (minus a small buffer for gas fees).
+
+### Confirm the transaction
+
+Click **Deposit** and approve the transaction in your Solana wallet. The UI will show:
+
+1. **Approving Transaction...** -- Waiting for your wallet signature
+2. **Confirming on Solana...** -- Waiting for Solana network confirmation
+
+### Track your deposit
+
+After confirmation, the **Deposit Status Tracker** appears with your Solana transaction signature. The relayer detects your deposit, waits for finality (32 slots, ~15 seconds), and mints tokens on XYZ Chain.
+
+</Steps>
+
+## Processing Time
+
+| Step | Duration |
+|------|----------|
+| Solana confirmation | ~5 seconds |
+| Finality wait (32 slots) | ~15 seconds |
+| Relayer detection + mint | ~5-10 seconds |
+| **Total** | **~30 seconds** |
+
+## What Happens Under the Hood
+
+```
+1. Your XYZ tokens transfer from your wallet → pool vault on Solana
+2. The bridge program emits a DepositEvent
+3. The relayer's PoolMonitor detects the event
+4. After 32-slot finality, the relayer's XyzExecutor mints tokens on XYZ Chain
+5. Minted tokens appear in your registered XYZ Chain address
+```
+
+<Warning>
+Only deposit amounts above the minimum (currently 1 XYZ). Deposits below the minimum will be rejected by the bridge program.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Withdraw" icon="arrow-up" href="/bridge/withdraw">
+    Bridge tokens back to Solana
+  </Card>
+  <Card title="Fees & Limits" icon="coins" href="/bridge/fees-and-limits">
+    Understand rate limits and gas requirements
+  </Card>
+</CardGroup>

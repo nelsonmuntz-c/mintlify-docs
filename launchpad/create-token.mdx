@@ -1,0 +1,101 @@
+---
+title: 'Create a Token'
+description: 'Launch a new token on the XYZ Launchpad bonding curve'
+---
+
+# Create a Token
+
+Anyone can create a new token on the XYZ Launchpad by paying the creation fee. Your token launches with a bonding curve and is immediately tradeable.
+
+## Prerequisites
+
+- An XYZ Chain wallet (Keplr, Leap, or XYZ Wallet)
+- At least **80,000 XYZ** for the creation fee (check the current fee in the launchpad UI)
+
+## Step-by-Step Guide
+
+<Steps>
+
+### Connect your wallet
+
+Click **Connect Wallet** on the Launchpad page. Select Keplr, Leap, or XYZ Wallet. Ensure your wallet has enough XYZ to cover the creation fee.
+
+### Fill in token details
+
+Provide the following information:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| Name | The full name of your token | "My Cool Token" |
+| Symbol | A short ticker (typically 3-6 characters) | "COOL" |
+| Image | URL to your token's logo | `https://example.com/logo.png` |
+| Description | A brief description of your token | "The coolest token on XYZ Chain" |
+| Social Links | Optional links to Twitter, website, etc. | `https://twitter.com/cooltoken` |
+
+### Confirm and pay the creation fee
+
+Review your token details and click **Create Token**. Your wallet will prompt you to approve a transaction that includes the creation fee.
+
+### Your token is live
+
+Once confirmed, your token is immediately available on the launchpad with a bonding curve. The creation fee becomes the initial XYZ reserves in the curve.
+
+</Steps>
+
+## What Happens on Creation
+
+When you create a token, the launchpad contract:
+
+1. Collects the creation fee as initial XYZ reserves for the curve
+2. Instantiates a new CW20 token contract with **100,000,000 token supply** (6 decimals)
+3. Holds all tokens in the launchpad contract (released via buys)
+4. Creates and indexes a bonding curve for the new token
+
+## Contract Message
+
+For developers integrating directly, the create token message is:
+
+```json
+{
+  "create_token": {
+    "name": "My Cool Token",
+    "symbol": "COOL",
+    "image": "https://example.com/logo.png",
+    "description": "The coolest token on XYZ Chain",
+    "social_links": ["https://twitter.com/cooltoken"]
+  }
+}
+```
+
+**Funds required**: `[{ "denom": "uxyz", "amount": "<creation_fee_in_uxyz>" }]`
+
+<Tip>
+Query the launchpad contract's `Config` endpoint to get the current creation fee:
+```json
+{ "config": {} }
+```
+The `creation_fee` field returns the fee in uxyz (e.g., `"80000000000"` = 80,000 XYZ).
+</Tip>
+
+## Token Name & Symbol Cooldown
+
+To prevent rapid spam and name squatting, the launchpad enforces an **8-hour cooldown** on token names and symbols. If someone creates a token named "DOGE", no one else can create another token with that same name or symbol for 8 hours. The check is case-insensitive.
+
+## Max Wallet Limit
+
+The launchpad enforces a **max wallet holding** limit (currently 3% of total supply). A single wallet cannot hold more than 3% of a token's supply through buys on the bonding curve. This prevents whales from accumulating outsized positions during the early bonding phase.
+
+## Creator Benefits
+
+As the token creator, your token gets visibility on the launchpad and automatic graduation to the AMM. Currently, all trading fees (0.5% buy, 2.5% sell) go to LP reserves. A creator fee share parameter exists on-chain but is set to 0% at this time.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Trading" icon="chart-line" href="/launchpad/trading">
+    Learn how to buy and sell on bonding curves
+  </Card>
+  <Card title="Graduation" icon="graduation-cap" href="/launchpad/graduation">
+    What happens when your token graduates to the AMM
+  </Card>
+</CardGroup>

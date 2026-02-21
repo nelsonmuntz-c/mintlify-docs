@@ -1,0 +1,458 @@
+---
+title: 'REST API'
+description: 'HTTP REST API for Cosmos SDK queries'
+---
+
+# REST API
+
+The REST API provides HTTP access to Cosmos SDK and CosmWasm queries.
+
+## Endpoint
+
+```
+http://localhost:1317
+```
+
+## Swagger Documentation
+
+Interactive API docs available at:
+
+```
+http://localhost:1317/swagger/
+```
+
+## Node Info
+
+### Get Node Info
+
+```bash
+curl http://localhost:1317/cosmos/base/tendermint/v1beta1/node_info
+```
+
+<Accordion title="Response">
+```json
+{
+  "default_node_info": {
+    "protocol_version": {"p2p": "8", "block": "11", "app": "0"},
+    "default_node_id": "abc123...",
+    "network": "xyz-localnet",
+    "version": "0.38.0",
+    "moniker": "localnet-node"
+  },
+  "application_version": {
+    "name": "xyz",
+    "app_name": "xyzd",
+    "version": "1.0.0",
+    "cosmos_sdk_version": "v0.50.13"
+  }
+}
+```
+</Accordion>
+
+### Get Syncing Status
+
+```bash
+curl http://localhost:1317/cosmos/base/tendermint/v1beta1/syncing
+```
+
+Response:
+```json
+{"syncing": false}
+```
+
+### Get Latest Block
+
+```bash
+curl http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest
+```
+
+## Bank Module
+
+### Query All Balances
+
+```bash
+curl http://localhost:1317/cosmos/bank/v1beta1/balances/xyz1address...
+```
+
+<Accordion title="Response">
+```json
+{
+  "balances": [
+    {"denom": "uxyz", "amount": "1000000"}
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+</Accordion>
+
+### Query Specific Denom
+
+```bash
+curl http://localhost:1317/cosmos/bank/v1beta1/balances/xyz1address.../by_denom?denom=uxyz
+```
+
+### Total Supply
+
+```bash
+curl http://localhost:1317/cosmos/bank/v1beta1/supply
+```
+
+### Supply of Denom
+
+```bash
+curl http://localhost:1317/cosmos/bank/v1beta1/supply/by_denom?denom=uxyz
+```
+
+## Auth Module
+
+### Get Account
+
+```bash
+curl http://localhost:1317/cosmos/auth/v1beta1/accounts/xyz1address...
+```
+
+<Accordion title="Response">
+```json
+{
+  "account": {
+    "@type": "/cosmos.auth.v1beta1.BaseAccount",
+    "address": "xyz1address...",
+    "pub_key": {
+      "@type": "/cosmos.crypto.secp256k1.PubKey",
+      "key": "A..."
+    },
+    "account_number": "0",
+    "sequence": "5"
+  }
+}
+```
+</Accordion>
+
+### List All Accounts
+
+```bash
+curl http://localhost:1317/cosmos/auth/v1beta1/accounts
+```
+
+## Staking Module
+
+### Get Validators
+
+```bash
+curl http://localhost:1317/cosmos/staking/v1beta1/validators
+```
+
+### Get Specific Validator
+
+```bash
+curl http://localhost:1317/cosmos/staking/v1beta1/validators/xyzvaloper1...
+```
+
+### Get Delegations
+
+```bash
+curl http://localhost:1317/cosmos/staking/v1beta1/delegations/xyz1delegator...
+```
+
+### Staking Pool
+
+```bash
+curl http://localhost:1317/cosmos/staking/v1beta1/pool
+```
+
+## Distribution Module
+
+### Delegator Rewards
+
+```bash
+curl http://localhost:1317/cosmos/distribution/v1beta1/delegators/xyz1.../rewards
+```
+
+### Validator Commission
+
+```bash
+curl http://localhost:1317/cosmos/distribution/v1beta1/validators/xyzvaloper1.../commission
+```
+
+## Governance Module
+
+### List Proposals
+
+```bash
+curl http://localhost:1317/cosmos/gov/v1/proposals
+```
+
+### Get Proposal
+
+```bash
+curl http://localhost:1317/cosmos/gov/v1/proposals/1
+```
+
+### Get Votes
+
+```bash
+curl http://localhost:1317/cosmos/gov/v1/proposals/1/votes
+```
+
+## CosmWasm Module
+
+### List Codes
+
+```bash
+curl http://localhost:1317/cosmwasm/wasm/v1/code
+```
+
+<Accordion title="Response">
+```json
+{
+  "code_infos": [
+    {
+      "code_id": "1",
+      "creator": "xyz1creator...",
+      "data_hash": "ABC123...",
+      "instantiate_permission": {"permission": "Everybody"}
+    }
+  ],
+  "pagination": {"next_key": null, "total": "1"}
+}
+```
+</Accordion>
+
+### Get Code Info
+
+```bash
+curl http://localhost:1317/cosmwasm/wasm/v1/code/1
+```
+
+### List Contracts by Code
+
+```bash
+curl http://localhost:1317/cosmwasm/wasm/v1/code/1/contracts
+```
+
+### Get Contract Info
+
+```bash
+curl http://localhost:1317/cosmwasm/wasm/v1/contract/xyz1contract...
+```
+
+<Accordion title="Response">
+```json
+{
+  "address": "xyz1contract...",
+  "contract_info": {
+    "code_id": "1",
+    "creator": "xyz1creator...",
+    "admin": "xyz1admin...",
+    "label": "My Contract",
+    "created": {"block_height": "12345"},
+    "ibc_port_id": ""
+  }
+}
+```
+</Accordion>
+
+### Query Contract State (Smart)
+
+The query message must be base64 encoded:
+
+```bash
+# Base64 encode the query
+QUERY=$(echo -n '{"get_count":{}}' | base64)
+# eyJnZXRfY291bnQiOnt9fQ==
+
+curl "http://localhost:1317/cosmwasm/wasm/v1/contract/xyz1contract.../smart/$QUERY"
+```
+
+<Accordion title="Response">
+```json
+{
+  "data": {"count": 42}
+}
+```
+</Accordion>
+
+### Query Contract State (Raw)
+
+Query raw storage by key:
+
+```bash
+KEY=$(echo -n "config" | xxd -p)
+curl "http://localhost:1317/cosmwasm/wasm/v1/contract/xyz1contract.../raw/$KEY"
+```
+
+### Get Contract History
+
+```bash
+curl http://localhost:1317/cosmwasm/wasm/v1/contract/xyz1contract.../history
+```
+
+## Transactions
+
+### Get Transaction by Hash
+
+```bash
+curl http://localhost:1317/cosmos/tx/v1beta1/txs/ABC123...
+```
+
+<Accordion title="Response">
+```json
+{
+  "tx": {
+    "body": {
+      "messages": [...],
+      "memo": ""
+    },
+    "auth_info": {...},
+    "signatures": [...]
+  },
+  "tx_response": {
+    "height": "12345",
+    "txhash": "ABC123...",
+    "code": 0,
+    "gas_wanted": "200000",
+    "gas_used": "150000",
+    "events": [...]
+  }
+}
+```
+</Accordion>
+
+### Search Transactions
+
+```bash
+# By sender
+curl "http://localhost:1317/cosmos/tx/v1beta1/txs?events=message.sender='xyz1sender...'"
+
+# By recipient
+curl "http://localhost:1317/cosmos/tx/v1beta1/txs?events=transfer.recipient='xyz1recipient...'"
+
+# By height
+curl "http://localhost:1317/cosmos/tx/v1beta1/txs?events=tx.height=12345"
+```
+
+### Simulate Transaction
+
+```bash
+curl -X POST http://localhost:1317/cosmos/tx/v1beta1/simulate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tx_bytes": "base64-encoded-tx",
+    "mode": "BROADCAST_MODE_SYNC"
+  }'
+```
+
+### Broadcast Transaction
+
+```bash
+curl -X POST http://localhost:1317/cosmos/tx/v1beta1/txs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tx_bytes": "base64-encoded-signed-tx",
+    "mode": "BROADCAST_MODE_SYNC"
+  }'
+```
+
+Modes:
+- `BROADCAST_MODE_SYNC` - Wait for CheckTx
+- `BROADCAST_MODE_ASYNC` - Return immediately
+- `BROADCAST_MODE_BLOCK` - Wait for block (deprecated)
+
+## Pagination
+
+Most list endpoints support pagination:
+
+```bash
+# First page
+curl "http://localhost:1317/cosmos/bank/v1beta1/balances/xyz1...?pagination.limit=10"
+
+# Next page (use next_key from previous response)
+curl "http://localhost:1317/cosmos/bank/v1beta1/balances/xyz1...?pagination.key=ABC123&pagination.limit=10"
+
+# Get total count
+curl "http://localhost:1317/cosmos/bank/v1beta1/balances/xyz1...?pagination.count_total=true"
+```
+
+## Parameters
+
+### Bank Params
+
+```bash
+curl http://localhost:1317/cosmos/bank/v1beta1/params
+```
+
+### Staking Params
+
+```bash
+curl http://localhost:1317/cosmos/staking/v1beta1/params
+```
+
+### Governance Params
+
+```bash
+curl http://localhost:1317/cosmos/gov/v1/params/voting
+curl http://localhost:1317/cosmos/gov/v1/params/deposit
+curl http://localhost:1317/cosmos/gov/v1/params/tallying
+```
+
+### Mint Params
+
+```bash
+curl http://localhost:1317/cosmos/mint/v1beta1/params
+```
+
+Response (XYZ Chain has zero inflation):
+```json
+{
+  "params": {
+    "mint_denom": "uxyz",
+    "inflation_rate_change": "0",
+    "inflation_max": "0",
+    "inflation_min": "0",
+    "goal_bonded": "0.67",
+    "blocks_per_year": "6311520"
+  }
+}
+```
+
+## Error Handling
+
+### Error Response
+
+```json
+{
+  "code": 5,
+  "message": "rpc error: code = NotFound desc = account xyz1invalid... not found",
+  "details": []
+}
+```
+
+### Common Error Codes
+
+| Code | Description |
+|------|-------------|
+| 2 | Unknown error |
+| 3 | Invalid argument |
+| 5 | Not found |
+| 11 | Out of range |
+
+## Complete Module Reference
+
+| Module | Base Path |
+|--------|-----------|
+| Auth | `/cosmos/auth/v1beta1/` |
+| Bank | `/cosmos/bank/v1beta1/` |
+| Distribution | `/cosmos/distribution/v1beta1/` |
+| Evidence | `/cosmos/evidence/v1beta1/` |
+| Gov | `/cosmos/gov/v1/` |
+| Mint | `/cosmos/mint/v1beta1/` |
+| Params | `/cosmos/params/v1beta1/` |
+| Slashing | `/cosmos/slashing/v1beta1/` |
+| Staking | `/cosmos/staking/v1beta1/` |
+| Upgrade | `/cosmos/upgrade/v1beta1/` |
+| Tendermint | `/cosmos/base/tendermint/v1beta1/` |
+| Tx | `/cosmos/tx/v1beta1/` |
+| CosmWasm | `/cosmwasm/wasm/v1/` |

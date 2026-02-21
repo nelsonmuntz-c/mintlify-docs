@@ -1,0 +1,298 @@
+---
+title: 'Key Management'
+description: 'Generate and manage cryptographic keypairs'
+---
+
+# Key Management
+
+The `xyz keys` commands manage cryptographic keypairs for signing transactions on XYZ Chain.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `xyz keys generate` | Create a new keypair |
+| `xyz keys list` | List all stored keys |
+| `xyz keys import` | Import from mnemonic |
+| `xyz keys export` | Export a keypair |
+
+## Generate a New Key
+
+Create a new keypair with a 24-word mnemonic:
+
+```bash
+xyz keys generate <name>
+```
+
+### Example
+
+```bash
+xyz keys generate mykey
+```
+
+<Accordion title="Output">
+```
+Generated new keypair: mykey
+
+Address: xyz1qwertyuiopasdfghjklzxcvbnm12345678
+
+Mnemonic (save this securely):
+abandon abandon abandon abandon abandon abandon abandon abandon
+abandon abandon abandon abandon abandon abandon abandon abandon
+abandon abandon abandon abandon abandon abandon abandon about
+
+WARNING: Write down your mnemonic phrase and store it securely.
+This is the only way to recover your account.
+```
+</Accordion>
+
+<Warning>
+**Save your mnemonic phrase immediately!** It is only displayed once and cannot be recovered.
+</Warning>
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--keyring-backend` | Override keyring backend |
+| `--home` | Override home directory |
+
+## List Keys
+
+View all stored keypairs:
+
+```bash
+xyz keys list
+```
+
+### Example Output
+
+```
+NAME      ADDRESS
+mykey     xyz1qwertyuiopasdfghjklzxcvbnm12345678
+alice     xyz1aliceaddress12345678901234567890
+bob       xyz1bobaddress123456789012345678901234
+```
+
+## Import a Key
+
+Import an existing key from a mnemonic phrase:
+
+```bash
+xyz keys import <name>
+```
+
+### Interactive Mode
+
+```bash
+xyz keys import mykey
+# Enter your 12 or 24 word mnemonic:
+```
+
+### With Flag
+
+```bash
+xyz keys import mykey --mnemonic "word1 word2 word3 ... word12"
+```
+
+### Validation
+
+The CLI validates:
+- Mnemonic must be 12 or 24 words
+- Words must be valid BIP39 words
+- Checksum must be valid
+
+```bash
+xyz keys import test --mnemonic "invalid mnemonic phrase"
+# Error: invalid mnemonic: word count must be 12 or 24
+```
+
+## Export a Key
+
+Export a keypair as armored ASCII:
+
+```bash
+xyz keys export <name>
+```
+
+### Example
+
+```bash
+xyz keys export mykey
+```
+
+<Accordion title="Output">
+```
+Enter passphrase to encrypt the exported key:
+Confirm passphrase:
+
+-----BEGIN TENDERMINT PRIVATE KEY-----
+kdf: bcrypt
+salt: ABC123DEF456...
+type: secp256k1
+
+base64EncodedEncryptedPrivateKey...
+-----END TENDERMINT PRIVATE KEY-----
+```
+</Accordion>
+
+The exported key is encrypted with the passphrase you provide. Import it on another machine with:
+
+```bash
+# On the target machine
+xyz keys import mykey --armor
+# Paste the armored key
+```
+
+## Key Derivation
+
+XYZ Chain uses the Cosmos standard HD path:
+
+```
+m/44'/118'/0'/0/0
+```
+
+| Component | Value | Meaning |
+|-----------|-------|---------|
+| Purpose | 44' | BIP44 |
+| Coin Type | 118' | Cosmos ecosystem |
+| Account | 0' | First account |
+| Change | 0 | External chain |
+| Index | 0 | First address |
+
+This ensures compatibility with:
+- Keplr wallet
+- Ledger (Cosmos app)
+- Other Cosmos wallets
+
+## Address Format
+
+Generated addresses use the `xyz` prefix with Bech32 encoding:
+
+```
+xyz1qwertyuiopasdfghjklzxcvbnm12345678
+└─┬─┘└────────────────┬─────────────────┘
+prefix        20-byte hash (base32)
+```
+
+## Keyring Security
+
+### OS Backend (Default)
+
+```bash
+xyz config set keyring-backend os
+```
+
+Uses platform-specific secure storage:
+
+| Platform | Storage | Security |
+|----------|---------|----------|
+| macOS | Keychain | High |
+| Windows | Credential Manager | High |
+| Linux | Secret Service | High |
+
+### File Backend
+
+```bash
+xyz config set keyring-backend file
+```
+
+- Encrypted with passphrase
+- Portable across machines
+- Requires passphrase for each operation
+
+### Test Backend
+
+```bash
+xyz config set keyring-backend test
+```
+
+<Warning>
+**Development only!** Keys stored unencrypted at `~/.xyz/keyring-test/`
+</Warning>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Backup Strategy">
+    1. Write mnemonic on paper immediately
+    2. Store in multiple secure locations
+    3. Consider metal backup (fire/water resistant)
+    4. Never store digitally (no photos, no cloud)
+  </Accordion>
+
+  <Accordion title="Multiple Keys">
+    Use separate keys for different purposes:
+    - `hot-wallet` - Daily transactions (small balance)
+    - `cold-wallet` - Long-term storage (large balance)
+    - `dev-wallet` - Development/testing only
+  </Accordion>
+
+  <Accordion title="Hardware Wallets">
+    For significant holdings, use a Ledger device:
+    ```bash
+    # Ledger support via xyzd
+    xyzd keys add mykey --ledger
+    ```
+  </Accordion>
+
+  <Accordion title="Key Rotation">
+    Periodically move funds to new keys:
+    1. Generate new key
+    2. Transfer funds
+    3. Archive old key (don't delete - may have pending rewards)
+  </Accordion>
+</AccordionGroup>
+
+## Using Keys with Commands
+
+Most commands accept key references via `--from` or `--key`:
+
+```bash
+# Query balance by key name
+xyz balance --key mykey
+
+# Send transaction with key
+xyz token transfer xyz1contract... xyz1recipient... 1000 --from mykey
+
+# Deploy contract with key
+xyz program deploy contract.wasm --from mykey
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Key not found">
+    Ensure the key exists:
+    ```bash
+    xyz keys list
+    ```
+    Check keyring backend matches:
+    ```bash
+    xyz config get keyring-backend
+    ```
+  </Accordion>
+
+  <Accordion title="Wrong keyring backend">
+    Keys are stored per-backend. If you created a key with `test` backend but are using `os`:
+    ```bash
+    xyz config set keyring-backend test
+    xyz keys list
+    ```
+  </Accordion>
+
+  <Accordion title="macOS Keychain permission">
+    On first use, macOS asks for permission. Click "Always Allow" to avoid repeated prompts.
+  </Accordion>
+
+  <Accordion title="Linux Secret Service">
+    Ensure a secret service is running:
+    ```bash
+    # GNOME Keyring
+    gnome-keyring-daemon --start
+
+    # Or use file backend instead
+    xyz config set keyring-backend file
+    ```
+  </Accordion>
+</AccordionGroup>

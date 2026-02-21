@@ -1,0 +1,248 @@
+---
+title: 'Balance Queries'
+description: 'Query native and token balances'
+---
+
+# Balance Queries
+
+The `xyz balance` command queries account balances including native XYZ and CW20 tokens.
+
+## Basic Usage
+
+```bash
+xyz balance <address>
+```
+
+Or by key name:
+
+```bash
+xyz balance --key <name>
+```
+
+## Query Native Balance
+
+### By Address
+
+```bash
+xyz balance xyz1abc123def456...
+```
+
+Output:
+```
+Address: xyz1abc123def456...
+
+Native Balances:
+  uxyz: 1,000,000,000,000 (1,000,000 XYZ)
+```
+
+### By Key Name
+
+```bash
+xyz balance --key mykey
+```
+
+The CLI resolves the address from your keyring automatically.
+
+## Query All Balances
+
+Include CW20 token balances with `--all`:
+
+```bash
+xyz balance --all --key mykey
+```
+
+Output:
+```
+Address: xyz1abc123def456...
+
+Native Balances:
+  uxyz: 1,000,000,000,000 (1,000,000 XYZ)
+
+CW20 Balances:
+  MTK (xyz1token1...): 500,000,000,000
+  USDC (xyz1token2...): 1,000,000,000
+```
+
+<Note>
+CW20 balances require tracked tokens in config. Add tokens with:
+```bash
+xyz config set cw20-tokens xyz1token1...,xyz1token2...
+```
+</Note>
+
+## JSON Output
+
+For scripting and automation:
+
+```bash
+xyz balance --key mykey --output json
+```
+
+```json
+{
+  "address": "xyz1abc123def456...",
+  "native_balances": [
+    {
+      "denom": "uxyz",
+      "amount": "1000000000000"
+    }
+  ],
+  "cw20_balances": []
+}
+```
+
+With `--all`:
+
+```json
+{
+  "address": "xyz1abc123def456...",
+  "native_balances": [
+    {
+      "denom": "uxyz",
+      "amount": "1000000000000"
+    }
+  ],
+  "cw20_balances": [
+    {
+      "contract": "xyz1token1...",
+      "balance": "500000000000"
+    }
+  ]
+}
+```
+
+## Command Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--key` | Key name from keyring | - |
+| `--all` | Include CW20 tokens | false |
+| `--output`, `-o` | Output format (table/json) | table |
+| `--node` | RPC endpoint override | config |
+
+## Examples
+
+### Check Test Account Balance
+
+```bash
+# Start localnet first
+xyz localnet start
+
+# Check alice's balance
+xyz balance --key alice
+```
+
+### Check Multiple Accounts
+
+```bash
+# List all keys
+xyz keys list
+
+# Check each balance
+for key in alice bob mykey; do
+  echo "=== $key ==="
+  xyz balance --key $key
+done
+```
+
+### Monitor Balance Changes
+
+```bash
+# Watch balance every 5 seconds
+watch -n 5 "xyz balance --key mykey"
+```
+
+### Parse Balance in Script
+
+```bash
+# Get raw amount
+BALANCE=$(xyz balance --key mykey --output json | jq -r '.native_balances[0].amount')
+echo "Balance: $BALANCE uxyz"
+
+# Check if sufficient
+if [ "$BALANCE" -lt "1000000" ]; then
+  echo "Warning: Low balance!"
+fi
+```
+
+## Understanding Amounts
+
+All on-chain amounts are in `uxyz` (micro XYZ):
+
+| Display | On-Chain (uxyz) |
+|---------|-----------------|
+| 1 XYZ | 1,000,000 |
+| 0.5 XYZ | 500,000 |
+| 0.000001 XYZ | 1 |
+
+The table output shows both:
+```
+uxyz: 1,000,000,000,000 (1,000,000 XYZ)
+       └── raw amount    └── display amount
+```
+
+## CW20 Token Balances
+
+### Setup Tracked Tokens
+
+1. Get token contract addresses
+2. Add to configuration:
+
+```bash
+xyz config set cw20-tokens xyz1mytoken...,xyz1anothertoken...
+```
+
+3. Query with `--all`:
+
+```bash
+xyz balance --all --key mykey
+```
+
+### Query Single Token
+
+For a specific token, use the token commands:
+
+```bash
+xyz token balance xyz1tokencontract... --key mykey
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Account not found">
+    The address may not exist on-chain yet (no transactions):
+    ```
+    Error: account xyz1... not found
+    ```
+    Fund the account first or check the address is correct.
+  </Accordion>
+
+  <Accordion title="Connection refused">
+    Node may not be running:
+    ```bash
+    # Check node status
+    curl http://localhost:26657/status
+
+    # Or start localnet
+    xyz localnet start
+    ```
+  </Accordion>
+
+  <Accordion title="CW20 balance not showing">
+    Ensure token is tracked:
+    ```bash
+    xyz config get cw20-tokens
+    # Should include your token address
+    ```
+    And use `--all` flag:
+    ```bash
+    xyz balance --all --key mykey
+    ```
+  </Accordion>
+
+  <Accordion title="Zero balance">
+    - Check address is correct
+    - Check you're on the right network (chain-id)
+    - For localnet, use test accounts (alice, bob)
+  </Accordion>
+</AccordionGroup>

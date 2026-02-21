@@ -1,0 +1,249 @@
+---
+title: 'Shell Completion'
+description: 'Enable tab completion for the xyz CLI'
+---
+
+# Shell Completion
+
+The `xyz completion` command generates shell completion scripts for faster command entry.
+
+## Supported Shells
+
+| Shell | Command |
+|-------|---------|
+| Bash | `xyz completion bash` |
+| Zsh | `xyz completion zsh` |
+| Fish | `xyz completion fish` |
+| PowerShell | `xyz completion powershell` |
+
+## Installation
+
+<Tabs>
+  <Tab title="Bash">
+    ### Temporary (Current Session)
+
+    ```bash
+    source <(xyz completion bash)
+    ```
+
+    ### Permanent (Add to Profile)
+
+    Add to `~/.bashrc`:
+
+    ```bash
+    echo 'source <(xyz completion bash)' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+
+    ### System-Wide
+
+    ```bash
+    xyz completion bash > /etc/bash_completion.d/xyz
+    ```
+
+    <Note>
+    System-wide installation requires root/sudo access.
+    </Note>
+  </Tab>
+
+  <Tab title="Zsh">
+    ### Temporary (Current Session)
+
+    ```bash
+    source <(xyz completion zsh)
+    ```
+
+    ### Permanent (Add to Profile)
+
+    Add to `~/.zshrc`:
+
+    ```bash
+    echo 'source <(xyz completion zsh)' >> ~/.zshrc
+    source ~/.zshrc
+    ```
+
+    ### Via fpath
+
+    ```bash
+    xyz completion zsh > "${fpath[1]}/_xyz"
+    ```
+
+    <Note>
+    If completions don't work, you may need to add:
+    ```bash
+    autoload -U compinit && compinit
+    ```
+    </Note>
+  </Tab>
+
+  <Tab title="Fish">
+    ### Temporary (Current Session)
+
+    ```bash
+    xyz completion fish | source
+    ```
+
+    ### Permanent
+
+    ```bash
+    xyz completion fish > ~/.config/fish/completions/xyz.fish
+    ```
+  </Tab>
+
+  <Tab title="PowerShell">
+    ### Temporary (Current Session)
+
+    ```powershell
+    xyz completion powershell | Out-String | Invoke-Expression
+    ```
+
+    ### Permanent (Add to Profile)
+
+    Add to your PowerShell profile:
+
+    ```powershell
+    # Find profile location
+    echo $PROFILE
+
+    # Add completion
+    Add-Content $PROFILE "xyz completion powershell | Out-String | Invoke-Expression"
+    ```
+  </Tab>
+</Tabs>
+
+## Usage
+
+After installation, press `Tab` to complete commands:
+
+```bash
+xyz ke<Tab>      # Completes to: xyz keys
+xyz keys ge<Tab> # Completes to: xyz keys generate
+xyz prog<Tab>    # Completes to: xyz program
+```
+
+### Command Completion
+
+```bash
+xyz <Tab><Tab>
+# Shows all available commands:
+# balance    chain      completion config     help
+# init       keys       localnet   program    token      tx
+```
+
+### Subcommand Completion
+
+```bash
+xyz program <Tab><Tab>
+# Shows subcommands:
+# build    deploy   execute  info     list     query
+```
+
+### Flag Completion
+
+```bash
+xyz balance --<Tab><Tab>
+# Shows flags:
+# --all    --help   --key    --node   --output
+```
+
+## Completion Features
+
+### Command Descriptions
+
+With zsh and fish, completions include descriptions:
+
+```
+xyz <Tab>
+balance    -- Query account balance
+chain      -- Chain information commands
+completion -- Generate shell completion script
+config     -- Configuration management
+...
+```
+
+### Dynamic Completions
+
+Some completions are context-aware:
+
+```bash
+xyz balance --output <Tab>
+# Shows: table  json
+
+xyz config set keyring-backend <Tab>
+# Shows: os  file  test
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Completions not working (Bash)">
+    Ensure bash-completion is installed:
+
+    **macOS:**
+    ```bash
+    brew install bash-completion
+    ```
+
+    **Ubuntu/Debian:**
+    ```bash
+    apt install bash-completion
+    ```
+
+    Add to `~/.bashrc`:
+    ```bash
+    [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && \
+      source "/usr/local/etc/profile.d/bash_completion.sh"
+    ```
+  </Accordion>
+
+  <Accordion title="Completions not working (Zsh)">
+    Enable completion system in `~/.zshrc`:
+
+    ```bash
+    autoload -U compinit && compinit
+    ```
+
+    Reload:
+    ```bash
+    source ~/.zshrc
+    ```
+  </Accordion>
+
+  <Accordion title="Old completions cached">
+    Remove cached completions and regenerate:
+
+    **Zsh:**
+    ```bash
+    rm -f ~/.zcompdump*
+    compinit
+    ```
+
+    **Bash:**
+    ```bash
+    complete -r xyz
+    source <(xyz completion bash)
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied">
+    For system-wide installation:
+    ```bash
+    sudo xyz completion bash > /etc/bash_completion.d/xyz
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Verify Installation
+
+Test that completions are working:
+
+```bash
+# Type this and press Tab
+xyz ba<Tab>
+# Should complete to: xyz balance
+
+xyz keys <Tab><Tab>
+# Should show: export  generate  import  list
+```
+
+If completions work, you're all set. If not, check the troubleshooting section above.

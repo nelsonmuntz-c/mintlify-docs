@@ -1,0 +1,267 @@
+---
+title: 'Configuration'
+description: 'Configure the xyz CLI'
+---
+
+# Configuration
+
+The `xyz` CLI uses a layered configuration system. This guide explains how to configure the CLI for different environments.
+
+## Configuration Commands
+
+### Set a Value
+
+```bash
+xyz config set <key> <value>
+```
+
+### Get a Value
+
+```bash
+xyz config get <key>
+```
+
+### List All Values
+
+```bash
+xyz config list
+```
+
+## Available Configuration Keys
+
+| Key | Description | Default | Valid Values |
+|-----|-------------|---------|--------------|
+| `node` | RPC endpoint | `tcp://localhost:26657` | URL |
+| `chain-id` | Chain identifier | `xyz-testnet-1` | String |
+| `keyring-backend` | Key storage method | `os` | `os`, `file`, `test` |
+| `home` | Data directory | `~/.xyz` | Path |
+| `cw20-code-id` | CW20 contract code | - | Positive integer |
+| `cw20-tokens` | Tracked token contracts | - | Comma-separated addresses |
+
+## Setting Up for Different Networks
+
+### Local Development
+
+```bash
+xyz config set node tcp://localhost:26657
+xyz config set chain-id xyz-testnet-1
+xyz config set keyring-backend test
+```
+
+### Testnet
+
+```bash
+xyz config set node tcp://rpc.testnet.xyz.com:26657
+xyz config set chain-id xyz-testnet-1
+xyz config set keyring-backend os
+```
+
+### Production
+
+```bash
+xyz config set node tcp://rpc.xyz.com:26657
+xyz config set chain-id xyz-mainnet-1
+xyz config set keyring-backend os
+```
+
+## Configuration File
+
+Configuration is stored in `~/.xyz/config.yaml`:
+
+```yaml
+node: tcp://localhost:26657
+chain-id: xyz-testnet-1
+keyring-backend: os
+cw20-code-id: 1
+cw20-tokens:
+  - xyz1tokencontract1...
+  - xyz1tokencontract2...
+```
+
+<Note>
+The config file is created automatically when you first run `xyz config set`. File permissions are set to `0600` for security.
+</Note>
+
+## Environment Variables
+
+Override any config value with environment variables:
+
+```bash
+# Format: XYZ_<KEY>
+export XYZ_NODE=tcp://rpc.testnet.xyz.com:26657
+export XYZ_CHAIN_ID=xyz-testnet-1
+export XYZ_KEYRING_BACKEND=os
+```
+
+### Precedence
+
+1. **Flags** - `--node tcp://...` (highest)
+2. **Environment** - `XYZ_NODE=tcp://...`
+3. **Config file** - `~/.xyz/config.yaml`
+4. **Defaults** (lowest)
+
+## Keyring Backend
+
+The keyring backend determines how private keys are stored:
+
+<Tabs>
+  <Tab title="OS (Recommended)">
+    Uses the operating system's secure keychain:
+
+    ```bash
+    xyz config set keyring-backend os
+    ```
+
+    | Platform | Storage |
+    |----------|---------|
+    | macOS | Keychain Access |
+    | Windows | Credential Manager |
+    | Linux | Secret Service API |
+
+    **Pros:** Most secure, no passphrase prompts
+
+    **Cons:** Platform-specific
+  </Tab>
+
+  <Tab title="File">
+    Encrypted file storage:
+
+    ```bash
+    xyz config set keyring-backend file
+    ```
+
+    Keys stored in `~/.xyz/keyring-file/` encrypted with a passphrase.
+
+    **Pros:** Portable, works everywhere
+
+    **Cons:** Requires passphrase for each operation
+  </Tab>
+
+  <Tab title="Test">
+    Plain text storage (development only):
+
+    ```bash
+    xyz config set keyring-backend test
+    ```
+
+    <Warning>
+    **Never use for real funds.** Keys are stored unencrypted.
+    </Warning>
+
+    **Pros:** No password prompts (great for scripts)
+
+    **Cons:** Zero security
+  </Tab>
+</Tabs>
+
+## CW20 Token Configuration
+
+Track CW20 tokens for balance queries:
+
+### Set CW20 Code ID
+
+After deploying the CW20 base contract, save its code ID:
+
+```bash
+xyz config set cw20-code-id 1
+```
+
+This is used by `xyz token create` to instantiate new tokens.
+
+### Track Token Contracts
+
+Add token contracts to track in balance queries:
+
+```bash
+# Add a single token
+xyz config set cw20-tokens xyz1tokenaddress...
+
+# View tracked tokens
+xyz config get cw20-tokens
+```
+
+Then query all balances including CW20 tokens:
+
+```bash
+xyz balance --all --key mykey
+```
+
+## Validation
+
+The CLI validates configuration values:
+
+| Key | Validation |
+|-----|------------|
+| `node` | Must start with `http://` or `tcp://` |
+| `keyring-backend` | Must be `os`, `file`, or `test` |
+| `cw20-code-id` | Must be positive integer |
+| `chain-id` | Non-empty string |
+
+Invalid values are rejected:
+
+```bash
+xyz config set keyring-backend invalid
+# Error: invalid keyring-backend: must be 'os', 'file', or 'test'
+```
+
+## Multiple Profiles
+
+For multiple networks, use separate home directories:
+
+```bash
+# Testnet profile
+xyz --home ~/.xyz-testnet config set node tcp://rpc.testnet.xyz.com:26657
+xyz --home ~/.xyz-testnet config set chain-id xyz-testnet-1
+
+# Mainnet profile
+xyz --home ~/.xyz-mainnet config set node tcp://rpc.xyz.com:26657
+xyz --home ~/.xyz-mainnet config set chain-id xyz-mainnet-1
+```
+
+Use with commands:
+```bash
+xyz --home ~/.xyz-testnet balance mykey
+xyz --home ~/.xyz-mainnet balance mykey
+```
+
+Or create shell aliases:
+```bash
+alias xyz-testnet='xyz --home ~/.xyz-testnet'
+alias xyz-mainnet='xyz --home ~/.xyz-mainnet'
+```
+
+## Reset Configuration
+
+To reset to defaults, delete the config file:
+
+```bash
+rm ~/.xyz/config.yaml
+```
+
+Or reset specific values:
+
+```bash
+xyz config set node tcp://localhost:26657
+```
+
+## Debugging
+
+### View Effective Configuration
+
+```bash
+xyz config list
+```
+
+### Check Environment
+
+```bash
+env | grep XYZ_
+```
+
+### Verbose Mode
+
+For debugging connection issues, check the node status:
+
+```bash
+curl http://localhost:26657/status | jq '.result.sync_info'
+```

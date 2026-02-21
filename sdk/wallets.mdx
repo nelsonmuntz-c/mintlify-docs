@@ -1,0 +1,185 @@
+---
+title: 'Wallet Integration'
+description: 'Connect Keplr, Leap, and XYZ Wallet in browser dApps'
+---
+
+# Wallet Integration
+
+The SDK supports three browser wallets (Keplr, Leap, XYZ Wallet) and a mnemonic-based connection for development. All return a standard `WalletConnection` interface.
+
+## Wallet Modal (Recommended)
+
+The easiest way to connect a wallet in a browser dApp. Shows a selection dialog with all available wallets:
+
+```typescript
+import { showWalletModal } from "@xyz-chain/sdk";
+
+const wallet = await showWalletModal({
+  rpcEndpoint: "http://67.205.164.156:26657",
+  restEndpoint: "http://67.205.164.156:1317",  // Optional
+  chainId: "xyz-1",                              // Optional
+  suggestChain: true,                            // Auto-register chain in wallet
+});
+
+if (wallet) {
+  console.log("Connected:", wallet.type);     // "keplr" | "leap" | "xyz"
+  console.log("Address:", wallet.address);    // "xyz1..."
+  // wallet.signer is ready for signing
+}
+```
+
+The modal automatically detects which wallets are installed and only shows available options.
+
+## Individual Wallet Connections
+
+Connect to a specific wallet directly:
+
+### Keplr
+
+```typescript
+import { connectKeplr } from "@xyz-chain/sdk";
+
+const wallet = await connectKeplr({
+  rpcEndpoint: "http://67.205.164.156:26657",
+  restEndpoint: "http://67.205.164.156:1317",
+  chainId: "xyz-1",
+  suggestChain: true,  // Register XYZ Chain in Keplr if not already added
+});
+
+console.log(wallet.address);
+```
+
+### Leap
+
+```typescript
+import { connectLeap } from "@xyz-chain/sdk";
+
+const wallet = await connectLeap({
+  rpcEndpoint: "http://67.205.164.156:26657",
+  restEndpoint: "http://67.205.164.156:1317",
+  suggestChain: true,
+});
+```
+
+### XYZ Wallet
+
+```typescript
+import { connectXYZ } from "@xyz-chain/sdk";
+
+const wallet = await connectXYZ({
+  rpcEndpoint: "http://67.205.164.156:26657",
+  restEndpoint: "http://67.205.164.156:1317",
+  suggestChain: true,
+});
+```
+
+## Wallet Detection
+
+Check which wallets are available before connecting:
+
+```typescript
+import {
+  isKeplrAvailable,
+  isLeapAvailable,
+  isXYZAvailable,
+  getAvailableWallets,
+} from "@xyz-chain/sdk";
+
+if (isKeplrAvailable()) {
+  console.log("Keplr extension detected");
+}
+
+if (isLeapAvailable()) {
+  console.log("Leap extension detected");
+}
+
+if (isXYZAvailable()) {
+  console.log("XYZ Wallet extension detected");
+}
+
+// Get all available wallet types
+const wallets = getAvailableWallets();
+// ["keplr", "leap", "xyz"] -- only includes installed wallets
+```
+
+## Direct Connection (Development)
+
+For Node.js scripts, tests, and development, connect with a mnemonic:
+
+```typescript
+import { connectDirect } from "@xyz-chain/sdk";
+
+const wallet = await connectDirect({
+  rpcEndpoint: "http://localhost:26657",
+  chainId: "xyz-testnet-1",
+  mnemonic: "your twelve word mnemonic phrase ...",
+  prefix: "xyz",
+});
+```
+
+<Warning>
+Never use `connectDirect` in production browser code. Mnemonics should only be used in server-side scripts and development environments.
+</Warning>
+
+## WalletConnection Interface
+
+All connection methods return the same interface:
+
+```typescript
+interface WalletConnection {
+  type: "keplr" | "leap" | "xyz" | "direct";
+  address: string;          // The connected xyz1... address
+  signer: OfflineSigner;    // CosmJS signer for transactions
+  disconnect(): void;       // Clean up connection
+}
+```
+
+Use `wallet.signer` with `createContractClient()` or other SDK transaction functions:
+
+```typescript
+import { createContractClient, executeContract } from "@xyz-chain/sdk";
+
+const contractClient = await createContractClient(
+  { rpcEndpoint: "http://67.205.164.156:26657" },
+  wallet
+);
+
+await executeContract(
+  contractClient,
+  wallet.address,
+  "xyz1...contract",
+  { some_action: {} }
+);
+```
+
+## Chain Registration
+
+When `suggestChain: true` is set, the SDK automatically registers XYZ Chain in the wallet if it hasn't been added before. This uses the chain info from the SDK:
+
+```typescript
+import { getXYZChainInfo } from "@xyz-chain/sdk";
+
+const chainInfo = getXYZChainInfo();
+// Returns full chain registration info (chainId, bech32 prefix, currencies, etc.)
+```
+
+## Disconnecting
+
+Always clean up wallet connections when done:
+
+```typescript
+wallet.disconnect();
+```
+
+In React applications, call `disconnect()` in cleanup effects or when the user logs out.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Transactions" icon="paper-plane" href="/sdk/transactions">
+    Sign and broadcast transactions
+  </Card>
+  <Card title="Queries" icon="magnifying-glass" href="/sdk/queries">
+    Read chain data without a wallet
+  </Card>
+</CardGroup>

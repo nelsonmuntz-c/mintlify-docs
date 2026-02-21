@@ -1,0 +1,255 @@
+---
+title: 'API Overview'
+description: 'Access XYZ Chain data through multiple API interfaces'
+---
+
+# API Overview
+
+XYZ Chain exposes three API interfaces for programmatic access.
+
+## Available APIs
+
+| API | Port | Protocol | Best For |
+|-----|------|----------|----------|
+| [Tendermint RPC](/api/rpc) | 26657 | HTTP/WebSocket | Transactions, blocks, consensus |
+| [REST API](/api/rest) | 1317 | HTTP | Browser apps, simple queries |
+| [gRPC](/api/grpc) | 9090 | HTTP/2 | High-performance, typed clients |
+
+## Endpoints by Network
+
+### Localnet
+
+```
+RPC:  http://localhost:26657
+REST: http://localhost:1317
+gRPC: localhost:9090
+```
+
+### Testnet
+
+```
+RPC:  https://rpc.testnet.xyz.network
+REST: https://api.testnet.xyz.network
+gRPC: grpc.testnet.xyz.network:443
+```
+
+### Mainnet
+
+```
+RPC:  https://rpc.xyz.network
+REST: https://api.xyz.network
+gRPC: grpc.xyz.network:443
+```
+
+## Quick Examples
+
+### Check Node Status
+
+<CodeGroup>
+```bash curl
+curl http://localhost:26657/status
+```
+
+```bash REST
+curl http://localhost:1317/cosmos/base/tendermint/v1beta1/node_info
+```
+
+```bash grpcurl
+grpcurl -plaintext localhost:9090 cosmos.base.tendermint.v1beta1.Service/GetNodeInfo
+```
+</CodeGroup>
+
+### Query Account Balance
+
+<CodeGroup>
+```bash curl (RPC)
+curl 'http://localhost:26657/abci_query?path="/cosmos.bank.v1beta1.Query/Balance"&data=...'
+```
+
+```bash REST
+curl http://localhost:1317/cosmos/bank/v1beta1/balances/xyz1address...
+```
+
+```bash grpcurl
+grpcurl -plaintext -d '{"address":"xyz1address..."}' \
+  localhost:9090 cosmos.bank.v1beta1.Query/AllBalances
+```
+</CodeGroup>
+
+### Query Smart Contract
+
+<CodeGroup>
+```bash xyz CLI
+xyz program query xyz1contract... '{"get_count":{}}'
+```
+
+```bash REST
+curl -X GET "http://localhost:1317/cosmwasm/wasm/v1/contract/xyz1contract.../smart/eyJnZXRfY291bnQiOnt9fQ=="
+```
+</CodeGroup>
+
+Note: The REST query data is base64-encoded JSON.
+
+## Choosing an API
+
+### Use Tendermint RPC when:
+
+- Broadcasting transactions
+- Subscribing to events (WebSocket)
+- Querying blocks and transactions
+- Checking consensus state
+
+### Use REST API when:
+
+- Building browser applications
+- Simple one-off queries
+- Human-readable responses
+- Quick prototyping
+
+### Use gRPC when:
+
+- Building production services
+- Need strongly-typed clients
+- High-performance requirements
+- Streaming responses
+
+## Authentication
+
+### Public Endpoints
+
+All read operations are public and don't require authentication:
+
+```bash
+# No auth needed
+curl http://localhost:1317/cosmos/bank/v1beta1/balances/xyz1...
+```
+
+### Transaction Signing
+
+Transactions must be signed client-side:
+
+```bash
+# Sign with xyz CLI
+xyz tx send xyz1recipient... 1000uxyz --from alice
+
+# Or sign programmatically and broadcast via API
+curl -X POST http://localhost:26657/broadcast_tx_sync \
+  -d '{"tx": "base64-encoded-signed-tx"}'
+```
+
+## Rate Limits
+
+### Localnet
+
+No rate limits.
+
+### Public Nodes
+
+| Endpoint | Limit |
+|----------|-------|
+| RPC | 100 req/min |
+| REST | 100 req/min |
+| gRPC | 1000 req/min |
+
+For higher limits, run your own node.
+
+## Common Patterns
+
+### Health Check
+
+```bash
+# Simple health check
+curl -f http://localhost:26657/health && echo "Healthy"
+```
+
+### Wait for Block
+
+```bash
+#!/bin/bash
+TARGET_BLOCK=$1
+while true; do
+  CURRENT=$(curl -s http://localhost:26657/status | jq -r '.result.sync_info.latest_block_height')
+  if [ "$CURRENT" -ge "$TARGET_BLOCK" ]; then
+    echo "Reached block $CURRENT"
+    break
+  fi
+  sleep 1
+done
+```
+
+### Poll for Transaction
+
+```bash
+#!/bin/bash
+TX_HASH=$1
+while true; do
+  RESULT=$(curl -s "http://localhost:26657/tx?hash=0x$TX_HASH")
+  if echo "$RESULT" | jq -e '.result' > /dev/null 2>&1; then
+    echo "Transaction confirmed"
+    echo "$RESULT" | jq '.result'
+    break
+  fi
+  sleep 1
+done
+```
+
+## WebSocket Subscriptions
+
+Subscribe to real-time events via Tendermint RPC:
+
+```javascript
+const ws = new WebSocket('ws://localhost:26657/websocket');
+
+ws.onopen = () => {
+  // Subscribe to new blocks
+  ws.send(JSON.stringify({
+    jsonrpc: '2.0',
+    method: 'subscribe',
+    params: ["tm.event='NewBlock'"],
+    id: 1
+  }));
+};
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('New block:', data.result.data.value.block.header.height);
+};
+```
+
+## Error Handling
+
+### HTTP Status Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 400 | Bad request (invalid parameters) |
+| 404 | Resource not found |
+| 500 | Internal server error |
+
+### Error Response Format
+
+```json
+{
+  "code": 5,
+  "message": "account xyz1invalid... not found",
+  "details": []
+}
+```
+
+## SDK Libraries
+
+For production applications, use official SDK libraries:
+
+| Language | Library |
+|----------|---------|
+| JavaScript | [@cosmjs/stargate](https://github.com/cosmos/cosmjs) |
+| Python | [cosmpy](https://github.com/fetchai/cosmpy) |
+| Go | [cosmos-sdk/client](https://github.com/cosmos/cosmos-sdk) |
+| Rust | [cosmrs](https://github.com/cosmos/cosmos-rust) |
+
+## Next Steps
+
+- [Tendermint RPC Reference](/api/rpc)
+- [REST API Reference](/api/rest)
+- [gRPC Reference](/api/grpc)

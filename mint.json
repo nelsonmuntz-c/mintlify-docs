@@ -1,0 +1,169 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "theme": "maple",
+  "name": "XYZ Chain",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#475569",
+    "light": "#64748b",
+    "dark": "#334155"
+  },
+  "appearance": {
+    "default": "light"
+  },
+  "font": {
+    "headings": {
+      "family": "Inter",
+      "weight": 600
+    },
+    "body": {
+      "family": "Inter",
+      "weight": 400
+    }
+  },
+  "background": {
+    "decoration": "grid"
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/xyz-chain/xyz"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "/quickstart"
+  },
+  "anchors": [
+    {
+      "name": "Community",
+      "icon": "discord",
+      "url": "https://discord.gg/xyz"
+    },
+    {
+      "name": "Blog",
+      "icon": "newspaper",
+      "url": "https://blog.xyz.com"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "architecture"
+      ]
+    },
+    {
+      "group": "Chain",
+      "pages": [
+        "chain/overview",
+        "chain/parameters",
+        "chain/accounts"
+      ]
+    },
+    {
+      "group": "Products",
+      "pages": [
+        "launchpad/overview",
+        "launchpad/create-token",
+        "launchpad/trading",
+        "launchpad/graduation",
+        "amm/overview",
+        "amm/swapping",
+        "amm/liquidity",
+        "bridge/overview",
+        "bridge/deposit",
+        "bridge/withdraw",
+        "bridge/architecture",
+        "bridge/fees-and-limits",
+        "bridge/faq",
+        "telegram/overview",
+        "telegram/commands",
+        "explorer/overview",
+        "explorer/searching"
+      ]
+    },
+    {
+      "group": "Developer Tools",
+      "pages": [
+        "cli/installation",
+        "cli/configuration",
+        "cli/keys",
+        "cli/balance",
+        "cli/transactions",
+        "cli/completion",
+        "sdk/overview",
+        "sdk/queries",
+        "sdk/transactions",
+        "sdk/wallets"
+      ]
+    },
+    {
+      "group": "Token Operations",
+      "pages": [
+        "tokens/overview",
+        "tokens/create",
+        "tokens/mint",
+        "tokens/transfer",
+        "tokens/burn",
+        "tokens/query"
+      ]
+    },
+    {
+      "group": "Smart Contracts",
+      "pages": [
+        "contracts/overview",
+        "contracts/scaffolding",
+        "contracts/building",
+        "contracts/deploying",
+        "contracts/executing",
+        "contracts/querying",
+        "contracts/discovery"
+      ]
+    },
+    {
+      "group": "Local Development",
+      "pages": [
+        "localnet/overview",
+        "localnet/start",
+        "localnet/accounts"
+      ]
+    },
+    {
+      "group": "Chain API",
+      "pages": [
+        "api/chain/introduction",
+        "api/chain/blocks",
+        "api/chain/transactions",
+        "api/chain/accounts",
+        "api/chain/balances",
+        "api/chain/validators",
+        "api/chain/network",
+        "api/chain/token-metadata"
+      ]
+    },
+    {
+      "group": "Launchpad API",
+      "pages": [
+        "api/launchpad/introduction",
+        "api/launchpad/list-tokens",
+        "api/launchpad/token-detail",
+        "api/launchpad/trades",
+        "api/launchpad/candles",
+        "api/launchpad/sse",
+        "api/launchpad/wallet"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "twitter": "https://twitter.com/xyzchain",
+    "github": "https://github.com/xyz-chain",
+    "discord": "https://discord.gg/xyz"
+  }
+}

@@ -1,0 +1,277 @@
+---
+title: 'Installation'
+description: 'Install the xyz command-line interface'
+---
+
+# Installation
+
+The `xyz` CLI provides a Solana-like interface for interacting with XYZ Chain. This guide covers installation methods for different platforms.
+
+## Prerequisites
+
+- **Go 1.21+** - [Download](https://go.dev/dl/)
+- **Git** - For cloning the repository
+- **Make** - For building from source
+
+## Install from Source
+
+### Clone and Build
+
+```bash
+# Clone the repository
+git clone https://github.com/xyz-chain/xyz
+cd xyz
+
+# Install the xyz CLI
+make install-cli
+
+# Verify installation
+xyz --version
+```
+
+### Install Both CLIs
+
+To install both `xyz` (developer CLI) and `xyzd` (chain daemon):
+
+```bash
+make install
+```
+
+## Binary Locations
+
+After installation, binaries are located at:
+
+| Binary | Location |
+|--------|----------|
+| `xyz` | `$GOPATH/bin/xyz` |
+| `xyzd` | `$GOPATH/bin/xyzd` |
+
+Ensure `$GOPATH/bin` is in your `PATH`:
+
+```bash
+export PATH=$PATH:$(go env GOPATH)/bin
+```
+
+Add this to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) for persistence.
+
+## Verify Installation
+
+```bash
+# Check version
+xyz --version
+
+# View help
+xyz --help
+```
+
+<Accordion title="Expected Output">
+```
+xyz - Solana-like CLI for XYZ Chain
+
+Usage:
+  xyz [command]
+
+Available Commands:
+  balance     Query account balance
+  chain       Chain information commands
+  completion  Generate shell completion script
+  config      Configuration management
+  help        Help about any command
+  init        Scaffold a new CosmWasm contract project
+  keys        Key management commands
+  localnet    Local development network commands
+  program     Smart contract commands
+  token       CW20 token commands
+  tx          Transaction commands
+
+Flags:
+      --chain-id string           Chain ID (default "xyz-testnet-1")
+  -h, --help                      help for xyz
+      --home string               Home directory (default "~/.xyz")
+      --keyring-backend string    Keyring backend (os|file|test) (default "os")
+      --node string               Node RPC endpoint (default "tcp://localhost:26657")
+
+Use "xyz [command] --help" for more information about a command.
+```
+</Accordion>
+
+## Shell Completion
+
+Enable tab completion for faster command entry:
+
+<Tabs>
+  <Tab title="Bash">
+    ```bash
+    # Add to ~/.bashrc
+    source <(xyz completion bash)
+
+    # Or install system-wide
+    xyz completion bash > /etc/bash_completion.d/xyz
+    ```
+  </Tab>
+  <Tab title="Zsh">
+    ```bash
+    # Add to ~/.zshrc
+    source <(xyz completion zsh)
+
+    # Or install to fpath
+    xyz completion zsh > "${fpath[1]}/_xyz"
+    ```
+  </Tab>
+  <Tab title="Fish">
+    ```bash
+    xyz completion fish | source
+
+    # Or install permanently
+    xyz completion fish > ~/.config/fish/completions/xyz.fish
+    ```
+  </Tab>
+  <Tab title="PowerShell">
+    ```powershell
+    xyz completion powershell | Out-String | Invoke-Expression
+    ```
+  </Tab>
+</Tabs>
+
+## Configuration
+
+### Initial Setup
+
+```bash
+# Set default node
+xyz config set node tcp://localhost:26657
+
+# Set chain ID
+xyz config set chain-id xyz-testnet-1
+
+# Set keyring backend
+xyz config set keyring-backend os
+```
+
+### View Configuration
+
+```bash
+xyz config list
+```
+
+Output:
+```
+node: tcp://localhost:26657
+chain-id: xyz-testnet-1
+keyring-backend: os
+home: /Users/you/.xyz
+```
+
+## Directory Structure
+
+The CLI stores data in `~/.xyz/`:
+
+```
+~/.xyz/
+├── config.yaml        # CLI configuration
+├── keyring-os/        # OS keyring metadata
+├── keyring-file/      # File keyring (if used)
+└── data/              # Local data cache
+```
+
+## Environment Variables
+
+All configuration can be set via environment variables with the `XYZ_` prefix:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `XYZ_NODE` | RPC endpoint | `tcp://localhost:26657` |
+| `XYZ_CHAIN_ID` | Chain ID | `xyz-testnet-1` |
+| `XYZ_KEYRING_BACKEND` | Keyring backend | `os` |
+| `XYZ_HOME` | Home directory | `~/.xyz` |
+
+Example:
+```bash
+export XYZ_NODE=tcp://rpc.testnet.xyz.com:26657
+xyz balance mykey  # Uses testnet RPC
+```
+
+## Configuration Precedence
+
+Configuration values are resolved in this order (highest to lowest):
+
+1. **Command-line flags** - `--node tcp://...`
+2. **Environment variables** - `XYZ_NODE=tcp://...`
+3. **Config file** - `~/.xyz/config.yaml`
+4. **Default values** - Built-in defaults
+
+## Updating
+
+### From Source
+
+```bash
+cd xyz
+git pull
+make install-cli
+```
+
+### Check for Updates
+
+```bash
+xyz --version
+# Compare with latest release on GitHub
+```
+
+## Uninstalling
+
+```bash
+# Remove binaries
+rm $(which xyz)
+rm $(which xyzd)
+
+# Remove data directory (optional)
+rm -rf ~/.xyz
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Command not found: xyz">
+    Ensure `$GOPATH/bin` is in your PATH:
+    ```bash
+    export PATH=$PATH:$(go env GOPATH)/bin
+    ```
+    Add to your shell profile for persistence.
+  </Accordion>
+
+  <Accordion title="Permission denied">
+    The binary may need executable permission:
+    ```bash
+    chmod +x $(go env GOPATH)/bin/xyz
+    ```
+  </Accordion>
+
+  <Accordion title="Build errors">
+    Ensure Go 1.21+ is installed:
+    ```bash
+    go version
+    # go version go1.21.x ...
+    ```
+    Update Go if needed from https://go.dev/dl/
+  </Accordion>
+
+  <Accordion title="Missing dependencies">
+    Run `go mod tidy` to fetch dependencies:
+    ```bash
+    cd xyz
+    go mod tidy
+    make install-cli
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/cli/configuration">
+    Configure the CLI for your environment
+  </Card>
+  <Card title="Key Management" icon="key" href="/cli/keys">
+    Generate and manage keypairs
+  </Card>
+</CardGroup>

@@ -1,0 +1,340 @@
+---
+title: 'Managing Localnet'
+description: 'Start, stop, and monitor your local development network'
+---
+
+# Managing Localnet
+
+Control your local XYZ Chain with `xyz localnet` commands.
+
+## Start Localnet
+
+```bash
+xyz localnet start
+```
+
+<Accordion title="Output">
+```
+Starting XYZ localnet...
+
+Initializing chain...
+Creating test accounts...
+Starting node...
+
+Localnet Started!
+
+RPC:  http://localhost:26657
+REST: http://localhost:1317
+gRPC: localhost:9090
+
+Test Accounts:
+  alice   xyz1alice...  1,000,000 XYZ
+  bob     xyz1bob...    500,000 XYZ
+
+Use 'xyz localnet stop' to stop the network
+```
+</Accordion>
+
+### Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--background` | Run in background | false |
+| `--reset` | Clear existing data first | false |
+
+### Run in Background
+
+```bash
+xyz localnet start --background
+```
+
+Logs are written to `~/.xyz-localnet/node.log`.
+
+### Fresh Start
+
+Clear existing data and start fresh:
+
+```bash
+xyz localnet start --reset
+```
+
+## Check Status
+
+```bash
+xyz localnet status
+```
+
+<Accordion title="Output (Running)">
+```
+Localnet Status: Running
+
+Node:     PID 12345
+Uptime:   2h 34m
+Block:    1,234
+
+Endpoints:
+  RPC:  http://localhost:26657 ✓
+  REST: http://localhost:1317  ✓
+  gRPC: localhost:9090         ✓
+
+Accounts:
+  alice   xyz1alice...   998,500 XYZ
+  bob     xyz1bob...     500,000 XYZ
+```
+</Accordion>
+
+<Accordion title="Output (Stopped)">
+```
+Localnet Status: Stopped
+
+No localnet is currently running.
+Run 'xyz localnet start' to start one.
+```
+</Accordion>
+
+## Stop Localnet
+
+```bash
+xyz localnet stop
+```
+
+<Accordion title="Output">
+```
+Stopping XYZ localnet...
+
+Node stopped (PID 12345)
+Localnet stopped successfully.
+
+Data preserved in ~/.xyz-localnet/
+Run 'xyz localnet start' to resume.
+```
+</Accordion>
+
+### Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--clean` | Also remove all data | false |
+
+### Stop and Clean
+
+Remove all data when stopping:
+
+```bash
+xyz localnet stop --clean
+```
+
+## View Logs
+
+When running in background:
+
+```bash
+# Follow logs
+tail -f ~/.xyz-localnet/node.log
+
+# Last 100 lines
+tail -100 ~/.xyz-localnet/node.log
+
+# Search for errors
+grep -i error ~/.xyz-localnet/node.log
+```
+
+## Lifecycle
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Localnet Lifecycle                    │
+└─────────────────────────────────────────────────────────┘
+
+   ┌──────────┐    xyz localnet start    ┌─────────┐
+   │ Stopped  │ ───────────────────────▶ │ Running │
+   └──────────┘                          └─────────┘
+        ▲                                     │
+        │           xyz localnet stop         │
+        └─────────────────────────────────────┘
+
+   State persists between stop/start (unless --reset or --clean)
+```
+
+## Common Workflows
+
+### Development Session
+
+```bash
+# Morning: Start localnet
+xyz localnet start --background
+
+# Work...deploy contracts, test, etc.
+
+# Evening: Stop localnet
+xyz localnet stop
+```
+
+### Quick Reset
+
+```bash
+# Something went wrong, start fresh
+xyz localnet stop --clean
+xyz localnet start
+```
+
+### Check Health
+
+```bash
+# Is localnet running?
+xyz localnet status
+
+# Can I reach the RPC?
+curl http://localhost:26657/status
+
+# What block are we on?
+curl http://localhost:26657/status | jq '.result.sync_info.latest_block_height'
+```
+
+## Environment Integration
+
+### With Scripts
+
+```bash
+#!/bin/bash
+
+# Ensure localnet is running
+if ! xyz localnet status | grep -q "Running"; then
+  echo "Starting localnet..."
+  xyz localnet start --background
+  sleep 5  # Wait for startup
+fi
+
+# Run tests
+./run-tests.sh
+
+# Optionally stop
+# xyz localnet stop
+```
+
+### With Make
+
+```makefile
+.PHONY: localnet-start localnet-stop test
+
+localnet-start:
+	xyz localnet start --background
+
+localnet-stop:
+	xyz localnet stop
+
+test: localnet-start
+	./run-tests.sh
+```
+
+### With Docker Compose
+
+If you prefer Docker:
+
+```yaml
+version: '3'
+services:
+  xyz-localnet:
+    image: xyz-chain:latest
+    ports:
+      - "26657:26657"
+      - "1317:1317"
+      - "9090:9090"
+    volumes:
+      - xyz-data:/root/.xyz
+volumes:
+  xyz-data:
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Start fails with 'port in use'">
+    Another process is using required ports:
+    ```bash
+    # Find what's using port 26657
+    lsof -i :26657
+
+    # Kill it
+    kill -9 <PID>
+
+    # Or check for zombie localnet
+    xyz localnet stop
+    ```
+  </Accordion>
+
+  <Accordion title="Start fails with 'permission denied'">
+    Check data directory permissions:
+    ```bash
+    ls -la ~/.xyz-localnet/
+
+    # Fix if needed
+    chmod -R 755 ~/.xyz-localnet/
+    ```
+  </Accordion>
+
+  <Accordion title="Node crashes immediately">
+    Check logs for errors:
+    ```bash
+    cat ~/.xyz-localnet/node.log | tail -50
+    ```
+
+    Often fixed by resetting:
+    ```bash
+    xyz localnet start --reset
+    ```
+  </Accordion>
+
+  <Accordion title="Status shows running but can't connect">
+    The node process may be stuck:
+    ```bash
+    # Force stop
+    xyz localnet stop
+
+    # Kill any remaining processes
+    pkill -f xyzd
+
+    # Start fresh
+    xyz localnet start --reset
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Configuration
+
+### Custom Genesis
+
+To customize genesis parameters:
+
+```bash
+# Stop localnet
+xyz localnet stop
+
+# Edit genesis
+vim ~/.xyz-localnet/config/genesis.json
+
+# Start with existing config
+xyz localnet start
+```
+
+### Custom Ports
+
+Edit `~/.xyz-localnet/config/config.toml`:
+
+```toml
+[rpc]
+laddr = "tcp://0.0.0.0:26657"
+
+[p2p]
+laddr = "tcp://0.0.0.0:26656"
+```
+
+And `~/.xyz-localnet/config/app.toml`:
+
+```toml
+[api]
+address = "tcp://0.0.0.0:1317"
+
+[grpc]
+address = "0.0.0.0:9090"
+```

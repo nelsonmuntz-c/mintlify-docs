@@ -1,0 +1,94 @@
+---
+title: 'Withdraw (XYZ Chain to Solana)'
+description: 'Step-by-step guide to bridging XYZ tokens from XYZ Chain back to Solana'
+---
+
+# Withdraw: XYZ Chain to Solana
+
+Withdrawing transfers your XYZ tokens from XYZ Chain back to Solana. Your tokens are burned on XYZ Chain, and the relayer releases an equivalent amount from the pool vault on Solana.
+
+## Prerequisites
+
+- An XYZ Chain wallet (Keplr, Leap, or XYZ Wallet) with bridge-minted XYZ tokens
+- Your Solana wallet address (where you want to receive tokens)
+- A small amount of XYZ for chain gas fees (~0.01 XYZ)
+
+<Warning>
+Only bridge-minted tokens can be withdrawn. Native staking rewards earned on XYZ Chain cannot cross back to Solana.
+</Warning>
+
+## Step-by-Step Guide
+
+<Steps>
+
+### Connect your XYZ Chain wallet
+
+Click **Connect XYZ Wallet** and select from Keplr, Leap, or XYZ Wallet. Your XYZ balance will appear once connected.
+
+### Enter your Solana destination address
+
+Paste the Solana wallet address where you want to receive tokens. This is a standard Solana address (32-44 characters, Base58 encoded).
+
+<Note>
+You do not need to connect a Solana wallet for withdrawals -- just paste the address. The relayer handles the Solana-side transfer.
+</Note>
+
+### Enter the withdrawal amount
+
+Type the amount of XYZ you want to bridge back. The UI shows your available balance.
+
+Click **Max** to fill your full balance minus a 0.01 XYZ gas buffer.
+
+### Confirm the burn transaction
+
+Click **Withdraw** and approve the transaction in your XYZ Chain wallet. The UI will show:
+
+1. **Approving Transaction...** -- Waiting for your wallet signature
+2. **Broadcasting on XYZ Chain...** -- Submitting the burn to the network
+
+### Track your withdrawal
+
+The **Withdraw Status Tracker** appears with your XYZ Chain burn transaction hash. The relayer detects the burn event and processes the withdrawal on Solana.
+
+</Steps>
+
+## Processing Time
+
+| Step | Duration |
+|------|----------|
+| XYZ Chain block confirmation | ~6 seconds |
+| Relayer detection | ~5-10 seconds |
+| Solana withdrawal execution | ~5 seconds |
+| **Total** | **~20-30 seconds** |
+
+## What Happens Under the Hood
+
+```
+1. You sign a MsgBurnForBridgeOut on XYZ Chain
+2. The bridge module burns tokens from your account
+3. A burn_for_bridge_out event is emitted with a unique burn_id
+4. The relayer's BurnMonitor detects the event
+5. The PoolExecutor transfers tokens from pool vault → your Solana token account
+```
+
+## Rate Limits
+
+Withdrawals are subject to governance-controlled rate limits:
+
+| Limit | Value |
+|-------|-------|
+| Max per transaction | 1,000,000 XYZ |
+| Max burns per block | 10 |
+
+For transfers above 1M XYZ, split into multiple transactions.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deposit" icon="arrow-down" href="/bridge/deposit">
+    Bridge tokens from Solana to XYZ Chain
+  </Card>
+  <Card title="FAQ" icon="circle-question" href="/bridge/faq">
+    Common questions about bridging
+  </Card>
+</CardGroup>

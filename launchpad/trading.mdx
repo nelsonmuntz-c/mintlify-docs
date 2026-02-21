@@ -1,0 +1,126 @@
+---
+title: 'Trading on Bonding Curves'
+description: 'How to buy and sell tokens on the XYZ Launchpad bonding curves'
+---
+
+# Trading on Bonding Curves
+
+Tokens on the launchpad are traded along a constant-product virtual curve. The price rises as more tokens are bought and falls as tokens are sold. The curve guarantees liquidity at every price point -- you can always buy or sell.
+
+## Buying Tokens
+
+To buy tokens on a bonding curve:
+
+1. Navigate to the token's page on the launchpad
+2. Enter the amount of **XYZ** you want to spend
+3. Review the estimated tokens you'll receive and the price impact
+4. Click **Buy** and confirm in your wallet
+
+### Buy Mechanics
+
+```
+XYZ input → 0.5% fee deducted → curve calculates tokens out → tokens sent to you
+```
+
+The number of tokens you receive is calculated using the constant-product formula, accounting for the current virtual reserves.
+
+### Slippage Protection
+
+When buying, you set a `min_tokens_out` value. If the trade would result in fewer tokens (due to other trades executing first), the transaction reverts. The UI calculates this automatically based on your slippage tolerance.
+
+## Selling Tokens
+
+To sell tokens back to the curve:
+
+1. Navigate to the token's page
+2. Switch to the **Sell** tab
+3. Enter the amount of **tokens** to sell
+4. Review the estimated XYZ you'll receive
+5. Click **Sell** and confirm in your wallet
+
+### Sell Mechanics
+
+```
+Tokens returned to curve → curve calculates XYZ out → 2.5% fee deducted → XYZ sent to you
+```
+
+The sell fee goes entirely to LP reserves (liquidity).
+
+### Slippage Protection
+
+When selling, you set a `min_xyz_out` value. If you'd receive less XYZ than this minimum, the transaction reverts.
+
+## Price Mechanics
+
+The bonding curve uses a **constant-product virtual curve**:
+
+```
+K = virtual_xyz * virtual_tokens
+price = K / (virtual_tokens_start - tokens_sold)^2
+```
+
+| Metric | Description |
+|--------|-------------|
+| Starting price | Dynamically computed from oracle XYZ/USD price |
+| Price direction | Increases as more tokens are bought |
+| Price discovery | Deterministic -- price is a function of supply sold |
+| Guaranteed liquidity | You can always buy or sell at the current curve price |
+
+### Reading the Chart
+
+The token page shows a price chart tracking the token over time. Key indicators:
+
+- **Current price** -- The price for the next marginal token
+- **Tokens sold** -- How many of the 100M supply have been purchased
+- **XYZ reserves** -- Total XYZ locked in the curve
+- **Progress** -- Percentage toward the dynamic XYZ graduation threshold
+
+## Simulating Trades
+
+Before executing, you can preview the exact outcome using the simulate endpoints:
+
+<CodeGroup>
+```json SimulateBuy
+{
+  "simulate_buy": {
+    "token_address": "<cw20_token_address>",
+    "xyz_amount": "1000000"
+  }
+}
+// Returns: tokens_out, fee_amount, new_price
+```
+
+```json SimulateSell
+{
+  "simulate_sell": {
+    "token_address": "<cw20_token_address>",
+    "token_amount": "1000000"
+  }
+}
+// Returns: xyz_out, fee_amount, burned_amount, new_price
+```
+</CodeGroup>
+
+The UI uses these queries to display estimated outcomes before you confirm.
+
+## Fee Summary
+
+| Action | Fee Rate | Details |
+|--------|----------|---------|
+| Buy | 0.5% | Deducted from XYZ input before curve calculation |
+| Sell | 2.5% | Goes to LP reserves (liquidity) |
+
+<Warning>
+Once a token graduates to the AMM, you can no longer buy or sell on the bonding curve. All trading moves to the [AMM](/amm/swapping).
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Graduation" icon="graduation-cap" href="/launchpad/graduation">
+    Learn what happens when a token reaches the graduation threshold
+  </Card>
+  <Card title="AMM Swapping" icon="arrow-right-arrow-left" href="/amm/swapping">
+    Trade on the AMM after graduation
+  </Card>
+</CardGroup>

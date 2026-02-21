@@ -1,0 +1,304 @@
+---
+title: 'Querying Contracts'
+description: 'Read contract state without transactions'
+---
+
+# Querying Contracts
+
+The `xyz program query` command reads contract state without submitting a transaction. Queries are free and instant.
+
+## Usage
+
+```bash
+xyz program query <contract> <message> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `contract` | Contract address |
+| `message` | JSON query or @file.json |
+
+## Basic Query
+
+```bash
+xyz program query xyz1contract... '{"get_count":{}}'
+```
+
+Output:
+```json
+{
+  "count": 42
+}
+```
+
+## Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--raw` | Compact JSON (no formatting) | false |
+| `--node` | RPC endpoint | config |
+
+## Query Formats
+
+### Inline JSON
+
+```bash
+xyz program query xyz1contract... '{"get_count":{}}'
+```
+
+### With Parameters
+
+```bash
+xyz program query xyz1contract... '{"get_balance":{"address":"xyz1user..."}}'
+```
+
+### From File
+
+```bash
+# Create query file
+echo '{"get_balance":{"address":"xyz1user..."}}' > query.json
+
+# Query from file
+xyz program query xyz1contract... @query.json
+```
+
+## Output Formats
+
+### Pretty (Default)
+
+```bash
+xyz program query xyz1contract... '{"token_info":{}}'
+```
+
+```json
+{
+  "name": "My Token",
+  "symbol": "MTK",
+  "decimals": 6,
+  "total_supply": "1000000000000"
+}
+```
+
+### Raw (Compact)
+
+```bash
+xyz program query xyz1contract... '{"token_info":{}}' --raw
+```
+
+```json
+{"name":"My Token","symbol":"MTK","decimals":6,"total_supply":"1000000000000"}
+```
+
+Use `--raw` for piping to other tools:
+
+```bash
+xyz program query xyz1contract... '{"token_info":{}}' --raw | jq '.total_supply'
+# "1000000000000"
+```
+
+## Common Query Patterns
+
+### Single Value
+
+```bash
+# Get a counter value
+xyz program query xyz1contract... '{"get_count":{}}'
+```
+
+```json
+{"count": 42}
+```
+
+### Address Parameter
+
+```bash
+# Get balance for address
+xyz program query xyz1token... '{"balance":{"address":"xyz1user..."}}'
+```
+
+```json
+{"balance": "1000000"}
+```
+
+### Paginated List
+
+```bash
+# Get items with pagination
+xyz program query xyz1contract... '{"all_items":{"limit":10}}'
+```
+
+```json
+{
+  "items": [
+    {"id": 1, "name": "Item 1"},
+    {"id": 2, "name": "Item 2"}
+  ]
+}
+```
+
+### With Start After
+
+```bash
+# Get next page
+xyz program query xyz1contract... '{"all_items":{"start_after":"2","limit":10}}'
+```
+
+## CW20 Token Queries
+
+### Token Info
+
+```bash
+xyz program query xyz1token... '{"token_info":{}}'
+```
+
+```json
+{
+  "name": "My Token",
+  "symbol": "MTK",
+  "decimals": 6,
+  "total_supply": "1000000000000"
+}
+```
+
+### Balance
+
+```bash
+xyz program query xyz1token... '{"balance":{"address":"xyz1user..."}}'
+```
+
+```json
+{"balance": "1000000"}
+```
+
+### Minter
+
+```bash
+xyz program query xyz1token... '{"minter":{}}'
+```
+
+```json
+{
+  "minter": "xyz1minter...",
+  "cap": null
+}
+```
+
+### All Accounts
+
+```bash
+xyz program query xyz1token... '{"all_accounts":{"limit":10}}'
+```
+
+```json
+{
+  "accounts": [
+    "xyz1addr1...",
+    "xyz1addr2..."
+  ]
+}
+```
+
+## Scripting
+
+### Extract Value
+
+```bash
+COUNT=$(xyz program query xyz1contract... '{"get_count":{}}' --raw | jq '.count')
+echo "Current count: $COUNT"
+```
+
+### Monitor State
+
+```bash
+#!/bin/bash
+CONTRACT="xyz1contract..."
+
+while true; do
+  RESULT=$(xyz program query $CONTRACT '{"get_count":{}}' --raw)
+  COUNT=$(echo $RESULT | jq '.count')
+  echo "$(date): Count = $COUNT"
+  sleep 10
+done
+```
+
+### Conditional Logic
+
+```bash
+#!/bin/bash
+BALANCE=$(xyz program query xyz1token... '{"balance":{"address":"xyz1user..."}}' --raw | jq -r '.balance')
+
+if [ "$BALANCE" -gt "1000000" ]; then
+  echo "Balance above threshold"
+else
+  echo "Balance below threshold"
+fi
+```
+
+## Query vs Execute
+
+| Aspect | Query | Execute |
+|--------|-------|---------|
+| State Change | No | Yes |
+| Transaction | No | Yes |
+| Gas Cost | Free | Paid |
+| Speed | Instant | Block time |
+
+```bash
+# Query (free, instant) - reads state
+xyz program query xyz1contract... '{"get_count":{}}'
+
+# Execute (costs gas, waits for block) - modifies state
+xyz program execute xyz1contract... '{"increment":{}}' --from alice
+```
+
+## Error Handling
+
+### Contract Not Found
+
+```
+Error: contract not found at xyz1invalid...
+```
+
+### Invalid Query Message
+
+```
+Error: Generic error: query failed - unknown query variant
+```
+
+Check your contract's `QueryMsg` enum for valid query names.
+
+### Query Error from Contract
+
+```
+Error: Query error: item not found
+```
+
+The contract returned an error (e.g., querying non-existent item).
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Unknown query variant">
+    Check your contract's QueryMsg:
+    ```rust
+    pub enum QueryMsg {
+        GetCount {},  // Use: {"get_count":{}}
+        GetItem { id: u64 },  // Use: {"get_item":{"id":1}}
+    }
+    ```
+    Note: Rust `GetCount` becomes JSON `get_count` (snake_case).
+  </Accordion>
+
+  <Accordion title="Invalid JSON">
+    Validate your query:
+    ```bash
+    echo '{"get_count":{}}' | jq .
+    ```
+  </Accordion>
+
+  <Accordion title="Empty response">
+    The contract may return empty for non-existent data. Check if the item exists first.
+  </Accordion>
+</AccordionGroup>

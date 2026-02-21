@@ -1,0 +1,197 @@
+---
+title: 'Local Development'
+description: 'Run a local XYZ Chain for development and testing'
+---
+
+# Local Development
+
+The `xyz localnet` command provides a complete local blockchain environment for development and testing.
+
+## Why Localnet?
+
+| Benefit | Description |
+|---------|-------------|
+| **Fast iteration** | No waiting for testnet blocks |
+| **Free transactions** | No need for testnet tokens |
+| **Full control** | Reset state anytime |
+| **Offline development** | No network required |
+
+## What's Included
+
+When you start localnet, you get:
+
+- **Full XYZ Chain node** running locally
+- **Pre-funded test accounts** (alice, bob)
+- **All APIs** (RPC, REST, gRPC)
+- **CosmWasm** enabled for smart contracts
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    xyz localnet                         │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │   xyzd      │  │  Tendermint │  │  CometBFT   │    │
+│  │   (app)     │◀─│  (consensus)│◀─│  (network)  │    │
+│  └─────────────┘  └─────────────┘  └─────────────┘    │
+│         │                                               │
+│         ▼                                               │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │                   APIs                           │   │
+│  ├─────────────┬─────────────┬─────────────────────┤   │
+│  │ RPC :26657  │ REST :1317  │ gRPC :9090          │   │
+│  └─────────────┴─────────────┴─────────────────────┘   │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Quick Start
+
+```bash
+# Start localnet
+xyz localnet start
+
+# In another terminal, check it's running
+xyz localnet status
+
+# Use test accounts
+xyz balance --key alice
+xyz balance --key bob
+
+# When done
+xyz localnet stop
+```
+
+## Endpoints
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Tendermint RPC | http://localhost:26657 | Transactions, blocks, consensus |
+| REST API | http://localhost:1317 | Cosmos SDK queries |
+| gRPC | localhost:9090 | Programmatic access |
+
+## Test Accounts
+
+Localnet comes with pre-funded accounts:
+
+| Name | Balance | Purpose |
+|------|---------|---------|
+| `alice` | 1,000,000 XYZ | Primary test account |
+| `bob` | 500,000 XYZ | Secondary test account |
+
+These accounts are automatically available in your keyring when localnet starts.
+
+## Data Directory
+
+Localnet stores data in `~/.xyz-localnet/`:
+
+```
+~/.xyz-localnet/
+├── config/
+│   ├── genesis.json    # Chain genesis
+│   ├── config.toml     # Node configuration
+│   └── app.toml        # App configuration
+├── data/
+│   └── ...             # Chain state
+└── keyring-test/
+    └── ...             # Test account keys
+```
+
+## Reset State
+
+To start fresh:
+
+```bash
+# Stop if running
+xyz localnet stop
+
+# Remove data
+rm -rf ~/.xyz-localnet
+
+# Start fresh
+xyz localnet start
+```
+
+## Development Workflow
+
+### 1. Start Localnet
+
+```bash
+xyz localnet start
+```
+
+### 2. Deploy Contract
+
+```bash
+xyz program deploy artifacts/my_contract.wasm \
+  --from alice \
+  --label "Test Contract"
+```
+
+### 3. Interact
+
+```bash
+# Query
+xyz program query xyz1contract... '{"get_count":{}}'
+
+# Execute
+xyz program execute xyz1contract... '{"increment":{}}' --from alice
+```
+
+### 4. Iterate
+
+Make changes and redeploy:
+
+```bash
+xyz program build
+xyz program deploy artifacts/my_contract.wasm --from alice --label "Test v2"
+```
+
+### 5. Reset When Needed
+
+```bash
+xyz localnet stop
+rm -rf ~/.xyz-localnet
+xyz localnet start
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port already in use">
+    Another process is using port 26657, 1317, or 9090:
+    ```bash
+    # Find and kill the process
+    lsof -i :26657
+    kill -9 <PID>
+
+    # Or stop any running localnet
+    xyz localnet stop
+    ```
+  </Accordion>
+
+  <Accordion title="Localnet won't start">
+    Try resetting:
+    ```bash
+    xyz localnet stop
+    rm -rf ~/.xyz-localnet
+    xyz localnet start
+    ```
+  </Accordion>
+
+  <Accordion title="Test accounts not found">
+    Ensure localnet is running:
+    ```bash
+    xyz localnet status
+    ```
+    Test accounts are only available when localnet is active.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+- [Start and stop localnet](/localnet/start)
+- [Test accounts](/localnet/accounts)
+- [Deploy your first contract](/contracts/deploying)

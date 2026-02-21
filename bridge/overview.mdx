@@ -1,0 +1,95 @@
+---
+title: 'Bridge Overview'
+description: 'Transfer XYZ tokens between Solana and XYZ Chain'
+---
+
+# XYZ Bridge
+
+The XYZ Bridge enables cross-chain transfers between Solana and XYZ Chain. It uses a **Pool Bridge** architecture with a custom Anchor program on Solana, ensuring proper custody and supply conservation across both chains.
+
+## How It Works
+
+The bridge operates through a liquidity pool on Solana and the `x/bridge` module on XYZ Chain:
+
+- **Deposit** (Solana to XYZ Chain) -- Lock tokens in the pool vault, mint equivalent tokens on XYZ Chain
+- **Withdraw** (XYZ Chain to Solana) -- Burn tokens on XYZ Chain, release from pool vault on Solana
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                        SOLANA                            │
+│                                                          │
+│   xyz-bridge program (Anchor)                            │
+│   ├── BridgePool (admin, relayer, vault, totals)         │
+│   ├── UserAccount (owner, xyz_chain_address, tracking)   │
+│   └── Pool vault (holds all deposited XYZ)               │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+                            │
+                     Relayer Service
+                            │
+┌─────────────────────────────────────────────────────────┐
+│                       XYZ CHAIN                          │
+│                                                          │
+│   x/bridge module                                        │
+│   ├── MsgMintFromBridge (relayer-controlled)             │
+│   └── MsgBurnForBridgeOut (user-initiated)               │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Supply Conservation
+
+The bridge maintains a strict invariant -- no tokens are created or destroyed in transit:
+
+```
+Solana Circulating + Pool Vault + XYZ Chain Supply = 1,000,000,000 XYZ
+```
+
+| Direction | Solana Circulating | Pool Vault | XYZ Chain Supply |
+|-----------|-------------------|------------|------------------|
+| Before deposit | X | 0 | 0 |
+| After deposit | X - amount | +amount | +amount |
+| After withdraw | X + amount | -amount | -amount |
+
+The total across all three locations never changes.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Self-Custody" icon="lock">
+    Your tokens are held in an auditable on-chain pool vault, not a centralized treasury.
+  </Card>
+  <Card title="User-Initiated Burns" icon="fire">
+    You sign your own burn transactions on XYZ Chain -- the relayer cannot move your funds.
+  </Card>
+  <Card title="Rate Limiting" icon="gauge">
+    Governance-controlled limits prevent abuse: max 1M XYZ per transaction, 10 burns per block.
+  </Card>
+  <Card title="Finality Confirmation" icon="clock">
+    The relayer waits for 32-slot finality on Solana before processing deposits.
+  </Card>
+</CardGroup>
+
+## Supported Wallets
+
+| Chain | Supported Wallets |
+|-------|-------------------|
+| Solana | Phantom, Solflare, and other Solana Wallet Adapter-compatible wallets |
+| XYZ Chain | Keplr, Leap, XYZ Wallet |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deposit" icon="arrow-down" href="/bridge/deposit">
+    Transfer tokens from Solana to XYZ Chain
+  </Card>
+  <Card title="Withdraw" icon="arrow-up" href="/bridge/withdraw">
+    Transfer tokens from XYZ Chain to Solana
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/bridge/architecture">
+    Technical deep-dive into the bridge system
+  </Card>
+  <Card title="Fees & Limits" icon="coins" href="/bridge/fees-and-limits">
+    Rate limits, minimums, and gas requirements
+  </Card>
+</CardGroup>

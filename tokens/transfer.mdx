@@ -1,0 +1,222 @@
+---
+title: 'Transfer Tokens'
+description: 'Send CW20 tokens to another address'
+---
+
+# Transfer Tokens
+
+The `xyz token transfer` command sends CW20 tokens from your account to another address.
+
+## Usage
+
+```bash
+xyz token transfer <contract> <recipient> <amount> --from <key>
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `contract` | Token contract address |
+| `recipient` | Destination address |
+| `amount` | Amount to send (in smallest unit) |
+
+### Flags
+
+| Flag | Description | Required |
+|------|-------------|----------|
+| `--from` | Your signing key | Yes |
+| `--dry-run` | Simulate only | No |
+
+## Examples
+
+### Basic Transfer
+
+```bash
+xyz token transfer xyz1tokencontract... xyz1recipient... 1000000 --from mykey
+```
+
+### Transfer All Tokens
+
+First check your balance:
+```bash
+xyz token balance xyz1tokencontract... --key mykey
+# Balance: 5000000
+```
+
+Then transfer:
+```bash
+xyz token transfer xyz1tokencontract... xyz1recipient... 5000000 --from mykey
+```
+
+### Dry Run
+
+```bash
+xyz token transfer xyz1tokencontract... xyz1recipient... 1000000 --from mykey --dry-run
+```
+
+Output:
+```
+Dry run mode - transaction not broadcast
+
+Estimated gas: 120,000
+Estimated fee: 1,200 uxyz
+
+Transfer Details:
+  Token: xyz1tokencontract...
+  From: xyz1youraddress...
+  To: xyz1recipient...
+  Amount: 1,000,000
+```
+
+## Output
+
+Successful transfer:
+
+```
+Tokens Transferred Successfully!
+
+Token:     xyz1tokencontract...
+From:      xyz1youraddress...
+To:        xyz1recipient...
+Amount:    1,000,000
+TxHash:    ABC123DEF456...
+Gas Used:  115678
+Block:     12345
+```
+
+## Verify Transfer
+
+Check balances after transfer:
+
+```bash
+# Your balance
+xyz token balance xyz1tokencontract... --key mykey
+
+# Recipient balance
+xyz token balance xyz1tokencontract... xyz1recipient...
+```
+
+## Amount Calculation
+
+Amount is in the token's smallest unit. For 6 decimals:
+
+| Display | Amount (base) |
+|---------|---------------|
+| 1 MTK | 1,000,000 |
+| 0.5 MTK | 500,000 |
+| 100 MTK | 100,000,000 |
+
+Example: Send 10 tokens:
+```bash
+xyz token transfer xyz1contract... xyz1recipient... 10000000 --from mykey
+#                                                  ^ 10 * 10^6
+```
+
+## Batch Transfers
+
+### Sequential
+
+```bash
+xyz token transfer xyz1contract... xyz1addr1... 1000000 --from mykey
+xyz token transfer xyz1contract... xyz1addr2... 2000000 --from mykey
+xyz token transfer xyz1contract... xyz1addr3... 3000000 --from mykey
+```
+
+### Script
+
+```bash
+#!/bin/bash
+CONTRACT="xyz1tokencontract..."
+KEY="mykey"
+
+# Recipients and amounts
+declare -A TRANSFERS=(
+  ["xyz1addr1..."]="1000000"
+  ["xyz1addr2..."]="2000000"
+  ["xyz1addr3..."]="3000000"
+)
+
+for addr in "${!TRANSFERS[@]}"; do
+  amount=${TRANSFERS[$addr]}
+  echo "Sending $amount to $addr..."
+  xyz token transfer $CONTRACT $addr $amount --from $KEY
+  sleep 1
+done
+```
+
+## Error Handling
+
+| Error | Meaning | Solution |
+|-------|---------|----------|
+| "insufficient token balance" | Not enough tokens | Check balance first |
+| "invalid address" | Bad recipient format | Verify address format (xyz1...) |
+| "contract not found" | Wrong contract address | Verify contract exists |
+
+### Check Balance Before Transfer
+
+```bash
+# Check your balance
+BALANCE=$(xyz token balance xyz1contract... --key mykey --output json | jq -r '.balance')
+
+# Compare with amount
+if [ "$BALANCE" -lt "1000000" ]; then
+  echo "Insufficient balance: $BALANCE"
+  exit 1
+fi
+```
+
+## Under the Hood
+
+`xyz token transfer` executes a `MsgExecuteContract`:
+
+```json
+{
+  "contract": "xyz1tokencontract...",
+  "msg": {
+    "transfer": {
+      "recipient": "xyz1recipient...",
+      "amount": "1000000"
+    }
+  },
+  "funds": []
+}
+```
+
+## Transfer vs Send
+
+CW20 has two transfer methods:
+
+| Method | Use Case |
+|--------|----------|
+| `transfer` | Send to regular address |
+| `send` | Send to contract with callback |
+
+The `xyz token transfer` command uses `transfer`. For contract interactions, use `xyz program execute`.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Insufficient balance">
+    Check your current balance:
+    ```bash
+    xyz token balance xyz1contract... --key mykey
+    ```
+    You can only transfer what you have.
+  </Accordion>
+
+  <Accordion title="Invalid recipient">
+    Ensure the address:
+    - Starts with `xyz1`
+    - Is the correct length
+    - Has valid checksum
+  </Accordion>
+
+  <Accordion title="Transaction timeout">
+    The node may be slow. Check status:
+    ```bash
+    curl http://localhost:26657/status | jq '.result.sync_info'
+    ```
+    Retry the transfer if needed.
+  </Accordion>
+</AccordionGroup>

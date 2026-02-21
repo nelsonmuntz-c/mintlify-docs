@@ -1,0 +1,178 @@
+---
+title: 'Bot Commands'
+description: 'Full command reference for the XYZ Telegram Trading Bot'
+---
+
+# Bot Commands
+
+All commands are used in private chat with the XYZ Trading Bot.
+
+## Command Reference
+
+### /start
+
+Opens the main menu or creates a new wallet for first-time users.
+
+**For new users:**
+- Creates a new XYZ Chain wallet
+- Displays your wallet address
+- Shows the main menu with all available actions
+
+**For returning users:**
+- Shows your current XYZ balance and price
+- Displays the interactive main menu
+
+---
+
+### /balance
+
+Displays all your wallet balances.
+
+**Shows:**
+- Native XYZ balance (formatted)
+- Current XYZ price in USD
+- All tracked CW20 token balances with values
+
+---
+
+### /send
+
+Interactive flow to send tokens to another address.
+
+<Steps>
+
+### Select token type
+
+Choose between sending **XYZ** (native) or a **CW20 token**.
+
+### Enter recipient address
+
+Paste the destination `xyz1...` address.
+
+### Enter amount
+
+Type the amount to send. The bot shows your available balance.
+
+### Confirm
+
+Review the transaction details including gas fees and confirm to send.
+
+</Steps>
+
+---
+
+### /referral
+
+View your referral program statistics.
+
+**Shows:**
+- Your unique referral link (deep link format)
+- Total referrals count
+- Total earnings in XYZ
+
+Share your referral link to earn rewards when new users join through it.
+
+---
+
+### /export
+
+Exports your wallet's mnemonic recovery phrase.
+
+<Warning>
+The mnemonic message **auto-deletes after 30 seconds** for security. Save it immediately and store it securely offline.
+</Warning>
+
+**Steps:**
+1. Bot displays a security warning
+2. Your encrypted mnemonic is decrypted and sent
+3. Message auto-deletes after 30 seconds
+
+---
+
+### /import
+
+Imports an existing wallet using a mnemonic phrase.
+
+**Usage:**
+```
+/import your twelve word mnemonic phrase goes here ...
+```
+
+**What happens:**
+1. Your message containing the mnemonic is **immediately deleted** for security
+2. The mnemonic is validated
+3. Any previous wallet is deactivated
+4. Your new wallet is active and ready to use
+
+<Note>
+Supports both 12-word and 24-word mnemonic phrases.
+</Note>
+
+---
+
+### /help
+
+Displays a summary of all available commands and mentions the quick trade feature (paste a token address to trade instantly).
+
+## Interactive Features
+
+Beyond text commands, the bot provides interactive buttons and flows:
+
+### Buy Tokens
+
+1. Tap **Buy** in the main menu (or paste a token address)
+2. Enter the token contract address
+3. Choose an amount or type a custom amount
+4. Confirm the purchase
+
+### Sell Tokens
+
+1. Tap **Sell** in the main menu
+2. Select a token from your portfolio
+3. Choose how much to sell (25%, 50%, 100%, or custom)
+4. Confirm the sale
+
+### View Positions
+
+Tap **Positions** to see all your token holdings with:
+- Token name and symbol
+- Amount held
+- Current value in XYZ
+- Profit/loss since purchase
+
+### Limit Orders
+
+1. Tap **Limit Orders** in the main menu
+2. Set a target price (buy below or sell above)
+3. Enter the amount
+4. The bot monitors and executes when the price is reached
+
+### Paste-to-Trade
+
+The quickest way to trade -- paste any CW20 token contract address directly into the chat. The bot recognizes it and shows:
+- Token info (name, symbol, price)
+- Quick buy/sell buttons
+- Current pool info
+
+## Command Summary
+
+| Command | Description |
+|---------|-------------|
+| `/start` | Main menu / create wallet |
+| `/balance` | Check all balances |
+| `/send` | Send tokens to an address |
+| `/referral` | View referral link and earnings |
+| `/export` | Export wallet mnemonic (auto-deletes) |
+| `/import <mnemonic>` | Import existing wallet |
+| `/help` | Show all commands |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Bot Overview" icon="robot" href="/telegram/overview">
+    Getting started with the bot
+  </Card>
+  <Card title="Launchpad" icon="rocket" href="/launchpad/overview">
+    Discover tokens to trade
+  </Card>
+</CardGroup>

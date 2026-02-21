@@ -1,0 +1,251 @@
+---
+title: 'Quickstart'
+description: 'Get started with XYZ Chain in 5 minutes'
+---
+
+# Quickstart
+
+This guide will walk you through setting up your development environment, generating keys, and deploying your first smart contract.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- **Go 1.24+** - [Download](https://go.dev/dl/)
+- **Docker** - For contract builds (optional but recommended)
+- **Rust** - For contract development (optional)
+
+## Step 1: Install the CLI
+
+### From Source
+
+```bash
+# Clone the repository
+git clone https://github.com/xyz-chain/xyz
+cd xyz
+
+# Install both binaries
+make install        # Installs xyzd (chain daemon)
+make install-cli    # Installs xyz (developer CLI)
+```
+
+### Verify Installation
+
+```bash
+xyz --version
+# xyz version 2.0.0
+
+xyzd version
+# xyzd version 2.0.0
+```
+
+## Step 2: Generate a Keypair
+
+Create your first keypair to interact with the chain:
+
+```bash
+xyz keys generate mykey
+```
+
+<Accordion title="Example Output">
+```
+Generated new keypair: mykey
+
+Address: xyz1abc123def456...
+Mnemonic (save this securely):
+abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
+
+WARNING: Write down your mnemonic phrase and store it securely.
+This is the only way to recover your account.
+```
+</Accordion>
+
+<Warning>
+**Save your mnemonic phrase!** This is the only way to recover your account. Never share it with anyone.
+</Warning>
+
+## Step 3: Start Local Development Network
+
+Launch a local testnet with pre-funded accounts:
+
+```bash
+xyz localnet start
+```
+
+<Accordion title="Example Output">
+```
+Starting local XYZ Chain...
+
+Chain ID:    xyz-1
+RPC:         http://localhost:26657
+REST:        http://localhost:1317
+gRPC:        localhost:9090
+
+Test Accounts:
+  alice: xyz1... (1,000,000 XYZ)
+  bob:   xyz1... (500,000 XYZ)
+
+Local network started successfully!
+```
+</Accordion>
+
+The localnet provides two pre-funded test accounts:
+
+| Account | Balance | Purpose |
+|---------|---------|---------|
+| `alice` | 1,000,000 XYZ | Development, deployment |
+| `bob` | 500,000 XYZ | Testing transfers |
+
+## Step 4: Check Your Balance
+
+Query the balance of the test account:
+
+```bash
+xyz balance --key alice
+```
+
+```
+Address: xyz1...
+Balance: 1,000,000,000,000 uxyz (1,000,000 XYZ)
+```
+
+## Step 5: Deploy Your First Contract
+
+### 5a. Scaffold a New Project
+
+```bash
+xyz init my-token
+cd my-token
+```
+
+This creates a complete CosmWasm project:
+
+```
+my-token/
+├── Cargo.toml
+├── src/
+│   ├── lib.rs
+│   ├── contract.rs
+│   ├── msg.rs
+│   ├── state.rs
+│   └── error.rs
+└── README.md
+```
+
+### 5b. Build the Contract
+
+```bash
+xyz program build
+```
+
+This uses Docker to create an optimized `.wasm` file:
+
+```
+Building contract with cosmwasm/optimizer:0.16.0...
+Optimized wasm: artifacts/my_token.wasm (180KB)
+```
+
+### 5c. Deploy to Local Network
+
+```bash
+xyz program deploy artifacts/my_token.wasm \
+  --from alice \
+  --label "My First Token"
+```
+
+```
+Contract Deployed Successfully!
+
+Code ID:   1
+Contract:  xyz1contract...
+Label:     My First Token
+TxHash:    ABC123...
+Gas Used:  234567
+```
+
+## Step 6: Interact with Your Contract
+
+### Query Contract State
+
+```bash
+xyz program query xyz1contract... '{"token_info":{}}'
+```
+
+```json
+{
+  "name": "My Token",
+  "symbol": "MTK",
+  "decimals": 6,
+  "total_supply": "1000000000000"
+}
+```
+
+### Execute Contract Method
+
+```bash
+xyz program execute xyz1contract... \
+  '{"transfer":{"recipient":"xyz1bob...","amount":"1000000"}}' \
+  --from alice
+```
+
+```
+Transaction successful!
+TxHash: DEF456...
+```
+
+## Step 7: Clean Up
+
+When you're done, stop the local network:
+
+```bash
+xyz localnet stop
+```
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card title="Token Operations" icon="coins" href="/tokens/overview">
+    Create and manage CW20 tokens
+  </Card>
+  <Card title="Contract Development" icon="code" href="/contracts/overview">
+    Deep dive into CosmWasm contracts
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/cli/installation">
+    Full CLI command documentation
+  </Card>
+  <Card title="API Reference" icon="plug" href="/api/chain/introduction">
+    REST, RPC, and gRPC endpoints
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port 26657 already in use">
+    Another process is using the RPC port. Stop any running chain instances:
+    ```bash
+    xyz localnet stop
+    # or
+    pkill xyzd
+    ```
+  </Accordion>
+
+  <Accordion title="Docker not found (during build)">
+    Install Docker or use local Rust build:
+    ```bash
+    xyz program build --local
+    ```
+    Note: Local builds require Rust with `wasm32-unknown-unknown` target.
+  </Accordion>
+
+  <Accordion title="Insufficient funds error">
+    Make sure you're using a funded test account:
+    ```bash
+    xyz balance --key alice
+    ```
+    If balance is zero, restart the localnet with `--reset`:
+    ```bash
+    xyz localnet start --reset
+    ```
+  </Accordion>
+</AccordionGroup>

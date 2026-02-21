@@ -1,0 +1,299 @@
+---
+title: 'Query Tokens'
+description: 'Check token balances and metadata'
+---
+
+# Query Tokens
+
+Query CW20 token information without submitting transactions.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `xyz token balance` | Check balance for an address |
+| `xyz token info` | View token metadata |
+| `xyz token list` | List all tokens you hold |
+
+## Token Balance
+
+Check the token balance of any address:
+
+```bash
+xyz token balance <contract> <address>
+```
+
+Or by key name:
+
+```bash
+xyz token balance <contract> --key <name>
+```
+
+### Example
+
+```bash
+xyz token balance xyz1tokencontract... xyz1myaddress...
+```
+
+Output:
+```
+Token Balance
+
+Contract: xyz1tokencontract...
+Address:  xyz1myaddress...
+Name:     My Token
+Symbol:   MTK
+Decimals: 6
+Balance:  1,000,000,000 (1,000 MTK)
+```
+
+### JSON Output
+
+```bash
+xyz token balance xyz1tokencontract... --key mykey --output json
+```
+
+```json
+{
+  "contract": "xyz1tokencontract...",
+  "address": "xyz1myaddress...",
+  "name": "My Token",
+  "symbol": "MTK",
+  "decimals": 6,
+  "balance": "1000000000"
+}
+```
+
+## Token Info
+
+View token metadata and supply:
+
+```bash
+xyz token info <contract>
+```
+
+### Example
+
+```bash
+xyz token info xyz1tokencontract...
+```
+
+Output:
+```
+Token Information
+
+Contract:     xyz1tokencontract...
+Name:         My Token
+Symbol:       MTK
+Decimals:     6
+Total Supply: 1,000,000,000,000 (1,000,000 MTK)
+
+Minter:       xyz1minteraddress...
+Cap:          Unlimited
+```
+
+### JSON Output
+
+```bash
+xyz token info xyz1tokencontract... --output json
+```
+
+```json
+{
+  "contract": "xyz1tokencontract...",
+  "name": "My Token",
+  "symbol": "MTK",
+  "decimals": 6,
+  "total_supply": "1000000000000",
+  "minter": "xyz1minteraddress...",
+  "cap": null
+}
+```
+
+## Token List
+
+List all CW20 tokens you hold:
+
+```bash
+xyz token list --key <name>
+```
+
+Or by address:
+
+```bash
+xyz token list <address>
+```
+
+### Example
+
+```bash
+xyz token list --key mykey
+```
+
+Output:
+```
+Tokens held by xyz1myaddress...
+
+CONTRACT                                    SYMBOL  DECIMALS  BALANCE
+xyz1tokencontract1...                       MTK     6         1,000,000,000
+xyz1tokencontract2...                       USDC    6         500,000,000
+xyz1tokencontract3...                       TEST    6         100,000
+```
+
+<Note>
+Token list queries the contracts configured in `cw20-tokens`. Add tokens with:
+```bash
+xyz config set cw20-tokens xyz1token1...,xyz1token2...
+```
+</Note>
+
+### JSON Output
+
+```bash
+xyz token list --key mykey --output json
+```
+
+```json
+{
+  "address": "xyz1myaddress...",
+  "tokens": [
+    {
+      "contract": "xyz1tokencontract1...",
+      "symbol": "MTK",
+      "decimals": 6,
+      "balance": "1000000000"
+    },
+    {
+      "contract": "xyz1tokencontract2...",
+      "symbol": "USDC",
+      "decimals": 6,
+      "balance": "500000000"
+    }
+  ]
+}
+```
+
+## Raw Contract Queries
+
+For advanced queries, use `xyz program query`:
+
+### Balance Query
+
+```bash
+xyz program query xyz1tokencontract... '{"balance":{"address":"xyz1addr..."}}'
+```
+
+```json
+{
+  "balance": "1000000000"
+}
+```
+
+### Token Info Query
+
+```bash
+xyz program query xyz1tokencontract... '{"token_info":{}}'
+```
+
+```json
+{
+  "name": "My Token",
+  "symbol": "MTK",
+  "decimals": 6,
+  "total_supply": "1000000000000"
+}
+```
+
+### Minter Query
+
+```bash
+xyz program query xyz1tokencontract... '{"minter":{}}'
+```
+
+```json
+{
+  "minter": "xyz1minteraddress...",
+  "cap": null
+}
+```
+
+### All Accounts Query
+
+```bash
+xyz program query xyz1tokencontract... '{"all_accounts":{"limit":10}}'
+```
+
+```json
+{
+  "accounts": [
+    "xyz1addr1...",
+    "xyz1addr2...",
+    "xyz1addr3..."
+  ]
+}
+```
+
+## Scripting Examples
+
+### Check Balance Threshold
+
+```bash
+#!/bin/bash
+CONTRACT="xyz1tokencontract..."
+ADDRESS="xyz1myaddress..."
+THRESHOLD=1000000
+
+BALANCE=$(xyz token balance $CONTRACT $ADDRESS --output json | jq -r '.balance')
+
+if [ "$BALANCE" -lt "$THRESHOLD" ]; then
+  echo "Warning: Balance ($BALANCE) below threshold ($THRESHOLD)"
+fi
+```
+
+### Export Holdings to CSV
+
+```bash
+xyz token list --key mykey --output json | \
+  jq -r '.tokens[] | [.contract, .symbol, .balance] | @csv' > holdings.csv
+```
+
+### Monitor Supply Changes
+
+```bash
+#!/bin/bash
+CONTRACT="xyz1tokencontract..."
+
+while true; do
+  SUPPLY=$(xyz token info $CONTRACT --output json | jq -r '.total_supply')
+  echo "$(date): Total Supply = $SUPPLY"
+  sleep 60
+done
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Contract not found">
+    Verify the contract address:
+    ```bash
+    xyz program info xyz1tokencontract...
+    ```
+  </Accordion>
+
+  <Accordion title="No tokens in list">
+    Add tokens to track:
+    ```bash
+    xyz config set cw20-tokens xyz1token1...,xyz1token2...
+    xyz token list --key mykey
+    ```
+  </Accordion>
+
+  <Accordion title="Connection error">
+    Check node is running:
+    ```bash
+    xyz localnet status
+    # or
+    curl http://localhost:26657/status
+    ```
+  </Accordion>
+</AccordionGroup>
