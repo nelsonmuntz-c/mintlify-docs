@@ -1,6 +1,5 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "theme": "maple",
   "name": "XYZ Chain",
   "logo": {
     "dark": "/logo/dark.svg",
@@ -15,19 +14,6 @@
   "appearance": {
     "default": "light"
   },
-  "font": {
-    "headings": {
-      "family": "Inter",
-      "weight": 600
-    },
-    "body": {
-      "family": "Inter",
-      "weight": 400
-    }
-  },
-  "background": {
-    "decoration": "grid"
-  },
   "topbarLinks": [
     {
       "name": "GitHub",
@@ -38,18 +24,6 @@
     "name": "Get Started",
     "url": "/quickstart"
   },
-  "anchors": [
-    {
-      "name": "Community",
-      "icon": "discord",
-      "url": "https://discord.gg/xyz"
-    },
-    {
-      "name": "Blog",
-      "icon": "newspaper",
-      "url": "https://blog.xyz.com"
-    }
-  ],
   "navigation": [
     {
       "group": "Getting Started",
